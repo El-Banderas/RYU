@@ -88,8 +88,6 @@ class SimpleSwitch13(app_manager.RyuApp):
 		dpid = format(datapath.id, "d").zfill(16)                               # int to string & pad 0 à esquerda
 		self.mac_to_port.setdefault(dpid, {})									# Caso dpid não exista, criar dpid->{} primeiro ara não dar erro
 
-		self.logger.info("packet in %s %s %s %s", dpid, src, dst, in_port)
-
 		# learn a mac address to avoid FLOOD next time.
 		self.mac_to_port[dpid][src] = in_port									# Como diz o comentário, adicionar entrada dpid -> ( mac_addr_src -> in_port )
 
@@ -97,6 +95,8 @@ class SimpleSwitch13(app_manager.RyuApp):
 			out_port = self.mac_to_port[dpid][dst]
 		else:
 			out_port = ofproto.OFPP_FLOOD
+			
+		#self.logger.info("packet in %s %s %s %s %s", dpid, src, dst, in_port, out_port)
 
 		actions = [parser.OFPActionOutput(out_port)]
 
