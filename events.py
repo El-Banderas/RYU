@@ -24,6 +24,17 @@ from ryu.lib.packet import ether_types
 
 from ryu.topology import event
 
+import sys
+import ruamel.yaml
+from datetime import datetime
+
+
+def clean_switch(switch_devices):
+	res = {}
+	for device_name, device_info in switch_devices.items():
+		if (device_info['status'] == 1):
+			res[device_name] = device_info['mac']
+	return res
 
 class SimpleSwitchLogger(app_manager.RyuApp):
 	OFP_VERSIONS = [ofproto_v1_3.OFP_VERSION]
@@ -68,10 +79,34 @@ class SimpleSwitchLogger(app_manager.RyuApp):
 
 	@set_ev_cls(event.EventPortModify)
 	def _port_modify_handler(self, ev):
-
+		print("Evento")
+		print(ev)
 		dpid = ev.port.dpid
 		port_no = ev.port.port_no
 		status = 1 if ev.port.is_live() else 0
 
+		if (self.hosts[dpid][port_no]["status"] == status):
+			return 
 		self.hosts[dpid][port_no]["status"] = status
 		print(self.hosts)
+		self.output_dict()
+
+
+	def output_dict(self):
+		yaml = ruamel.yaml.YAML()  # defaults to round-trip
+		print("YAML")
+		dic_final = {}
+		current_entryes_number = 0
+		for switch_name, switch_devices in self.hosts.items():
+			dic_final[switch_name] = clean_switch(switch_devices)
+		print("Final")
+		print(dic_final)
+
+		now = datetime.now()
+
+		current_time = now.strftime("%H:%M:%S")
+		f = open(current_time + ".txt", "a")
+		yaml.dump(dic_final, f)
+		yaml.dump(dic_final, sys.stdout)
+		last_entryes_number = current_entryes_number
+		f.close()
