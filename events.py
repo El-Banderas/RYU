@@ -84,7 +84,7 @@ class SimpleSwitchLogger(app_manager.RyuApp):
 		dpid = ev.port.dpid
 		port_no = ev.port.port_no
 		status = 1 if ev.port.is_live() else 0
-
+		# Se o estado anterior for igual ao atual, não modifica nada
 		if (self.hosts[dpid][port_no]["status"] == status):
 			return 
 		self.hosts[dpid][port_no]["status"] = status
