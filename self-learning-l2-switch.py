@@ -85,8 +85,8 @@ class SimpleSwitch13(app_manager.RyuApp):
 		dst = eth.dst															# "Ler" mac_addr_dst
 		src = eth.src															# "Ler" mac_addr_src
 
-		dpid = format(datapath.id, "d").zfill(16)                               # int to string & pad 0 à esquerda
-		self.mac_to_port.setdefault(dpid, {})									# Caso dpid não exista, criar dpid->{} primeiro ara não dar erro
+		dpid = format(datapath.id, "d").zfill(16)								# int to string & pad 0 à esquerda
+		self.mac_to_port.setdefault(dpid, {})									# Caso dpid não exista, criar dpid->{} primeiro para não dar erro
 
 		# learn a mac address to avoid FLOOD next time.
 		self.mac_to_port[dpid][src] = in_port									# Como diz o comentário, adicionar entrada dpid -> ( mac_addr_src -> in_port )
