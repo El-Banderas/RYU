@@ -96,7 +96,8 @@ class SimpleSwitch13(app_manager.RyuApp):
 		else:
 			out_port = ofproto.OFPP_FLOOD
 			
-		#self.logger.info("packet in %s %s %s %s %s", dpid, src, dst, in_port, out_port)
+		#self.logger.info("packet_in | dpid=%s src=%s dst=%s in_port=%s out_port=%s", dpid, src, dst, in_port, out_port)
+		#print("packet_in | mac_to_port=", self.mac_to_port)
 
 		actions = [parser.OFPActionOutput(out_port)]
 
