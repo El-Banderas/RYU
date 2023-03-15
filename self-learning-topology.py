@@ -3,6 +3,8 @@ from ryu.base import app_manager
 from ryu.controller.handler import set_ev_cls
 from ryu.ofproto import ofproto_v1_3
 from ryu.topology import event
+from ryu.controller import ofp_event
+from ryu.controller.handler import CONFIG_DISPATCHER, MAIN_DISPATCHER
 
 import sys
 #import ruamel.yaml
@@ -35,6 +37,7 @@ class SimpleSwitchLogger(app_manager.RyuApp):
 		self.hosts[dpid][port_no] = {"mac":mac, "status":1}
 		print("host_add | hosts=", self.hosts)
 
+
 	@set_ev_cls(event.EventPortModify)
 	def _port_modify_handler(self, ev):
 		print("Evento")
@@ -48,6 +51,11 @@ class SimpleSwitchLogger(app_manager.RyuApp):
 		self.hosts[dpid][port_no]["status"] = status
 		print("port_mod | hosts=", self.hosts)
 		#self.output_dict()
+	
+	
+	@set_ev_cls(ofp_event.EventOFPPacketIn, MAIN_DISPATCHER)
+	def _packet_in_handler(self, ev):
+		print("Hello!!")
 
 
 	def output_dict(self):
@@ -68,7 +76,6 @@ class SimpleSwitchLogger(app_manager.RyuApp):
 		yaml.dump(dic_final, sys.stdout)
 		last_entryes_number = current_entryes_number
 		f.close()
-	
 	
 
 	@set_ev_cls(event.EventSwitchBase)

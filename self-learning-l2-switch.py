@@ -48,6 +48,7 @@ class SimpleSwitch13(app_manager.RyuApp):
 										  ofproto.OFPCML_NO_BUFFER)]
 		self.add_flow(datapath, 0, match, actions)
 
+
 	def add_flow(self, datapath, priority, match, actions, buffer_id=None):
 		ofproto = datapath.ofproto
 		parser = datapath.ofproto_parser
@@ -62,6 +63,7 @@ class SimpleSwitch13(app_manager.RyuApp):
 			mod = parser.OFPFlowMod(datapath=datapath, priority=priority,
 									match=match, instructions=inst)
 		datapath.send_msg(mod)
+
 
 	@set_ev_cls(ofp_event.EventOFPPacketIn, MAIN_DISPATCHER)					# Definir handler de pacotes recebidos ( type of event this function is called for = ofp_event.EventOFPPacketIn) com o decorator 'set_ev_cls'
 	def _packet_in_handler(self, ev):
