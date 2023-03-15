@@ -11,6 +11,7 @@ from ryu.lib.packet import ether_types
 
 import sys
 #import ruamel.yaml
+import yaml
 from datetime import datetime
 
 
@@ -27,15 +28,12 @@ class SimpleSwitchLogger(app_manager.RyuApp):
 	def __init__(self, *args, **kwargs):
 		super(SimpleSwitchLogger, self).__init__(*args, **kwargs)
 
-		self.deprecated = {}
-		self.mac_to_port = {}
-
 		self.switches = {}
 		"""
 		switches:
 			- s1:
-				- 1: s1_mac1
-				- 2: s1_mac2
+				- 1: h1_mac1
+				- 2: h2_mac1
 				...
 			- s2:
 				...
@@ -52,42 +50,37 @@ class SimpleSwitchLogger(app_manager.RyuApp):
 				...
 			...
 		"""
-		
-		self.connections = {}
-		"""
-		connections:
-			- s1_mac1: h1_mac1
-			- s1_mac2: h2_mac1
-			- s2_mac1: s1_mac3
-			...
-		"""
+
+		self.current_id = 1
+		self.nametable = {}
 
 	
 	@set_ev_cls(event.EventHostAdd)
 	def _host_add_handler(self, ev):
-
-		dpid = ev.host.port.dpid
+		dpid = "s" + format(ev.host.port.dpid, "d")
 		port_no = ev.host.port.port_no
 		mac = ev.host.mac
 
-		self.deprecated.setdefault(dpid, {})
-		self.deprecated[dpid][port_no] = {"mac":mac, "status":1}
-		#print("host_add | deprecated=", self.deprecated)
+		self.switches.setdefault(dpid, {})
+		self.switches[dpid][port_no] = {"mac":mac, "status":1}
+
+		#print("host_add | switches=", self.switches)
+		self.output_dict()
 
 
 	@set_ev_cls(event.EventPortModify)
 	def _port_modify_handler(self, ev):
-		print("Evento")
-		print(ev)
-		dpid = ev.port.dpid
+		dpid = "s" + format(ev.port.dpid, "d")
 		port_no = ev.port.port_no
 		status = 1 if ev.port.is_live() else 0
+
 		# Se o estado anterior for igual ao atual, não modifica nada
-		if (self.deprecated[dpid][port_no]["status"] == status):
-			return 
-		self.deprecated[dpid][port_no]["status"] = status
-		#print("port_mod | deprecated=", self.deprecated)
-		#self.output_dict()
+		if (self.switches[dpid][port_no]["status"] == status):
+			return
+		self.switches[dpid][port_no]["status"] = status
+
+		#print("port_mod | switches=", self.switches)
+		self.output_dict()
 	
 	
 	@set_ev_cls(ofp_event.EventOFPPacketIn, MAIN_DISPATCHER)
@@ -108,35 +101,26 @@ class SimpleSwitchLogger(app_manager.RyuApp):
 		src_ip = ipv.src
 		dst_ip = ipv.dst
 
-		self.mac_to_port.setdefault(dpid, {})
-		self.mac_to_port[dpid][src_mac] = in_port
-
-		if dst_mac in self.mac_to_port[dpid]:
-			out_port = self.mac_to_port[dpid][dst_mac]
+		if src_mac in self.nametable:
+			hid = self.nametable[src_mac]
 		else:
-			out_port = -1
-			
-		self.logger.info("packet_in | dpid=%s src_ip=%s dst_ip=%s src_mac=%s dst_mac=%s in_port=%s out_port=%s", dpid, src_ip, dst_ip, src_mac, dst_mac, in_port, out_port)
-		#print("packet_in | mac_to_port=", self.mac_to_port)
+			hid = "h" + format(self.current_id, "d")
+			self.current_id += 1
+			self.nametable[src_mac] = hid
+
+		self.hosts[hid] = {"mac":src_mac, "ip":src_ip}
+
+		#print("packet_in | hosts=", self.hosts)
 
 
 	def output_dict(self):
-		yaml = ruamel.yaml.YAML()  # defaults to round-trip
-		print("YAML")
-		dic_final = {}
-		current_entryes_number = 0
-		for switch_name, switch_devices in self.deprecated.items():
-			dic_final[switch_name] = clean_switch(switch_devices)
-		print("Final")
-		print(dic_final)
 
-		now = datetime.now()
+		dic_final = {"switches":self.switches, "hosts":self.hosts}
 
-		current_time = now.strftime("%H:%M:%S")
-		f = open(current_time + ".txt", "a")
+		#current_time = datetime.now().strftime("%H:%M:%S")
+		f = open("topology_" + "test" + ".yaml", "w")
 		yaml.dump(dic_final, f)
-		yaml.dump(dic_final, sys.stdout)
-		last_entryes_number = current_entryes_number
+		#yaml.dump(dic_final, sys.stdout)
 		f.close()
 	
 
