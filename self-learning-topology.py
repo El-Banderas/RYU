@@ -10,6 +10,13 @@ from ryu.lib.packet import packet
 
 import sys
 import ruamel.yaml
+from ryu.lib.packet import packet
+from ryu.lib.packet import ethernet, ipv6
+from ryu.lib.packet import ether_types
+
+import sys
+#import ruamel.yaml
+import yaml
 from datetime import datetime
 
 def clean_switch(switch_devices):
@@ -24,38 +31,72 @@ class SimpleSwitchLogger(app_manager.RyuApp):
 
 	def __init__(self, *args, **kwargs):
 		super(SimpleSwitchLogger, self).__init__(*args, **kwargs)
+
+		self.switches = {}
+		"""
+		switches:
+			- s1:
+				- 1: h1_mac1
+				- 2: h2_mac1
+				...
+			- s2:
+				...
+			...
+		"""
+
 		self.hosts = {}
 		self.host_map_ip = {}
+		"""
+		hosts:
+			- h1:
+				- ip: h1_ip
+				- mac: h1_mac
+			- h2:
+				...
+			...
+		"""
+
+		self.current_id = 1
+		self.nametable = {}
 
 	
 	@set_ev_cls(event.EventHostAdd)
 	def _host_add_handler(self, ev):
-
-		dpid = ev.host.port.dpid
+		dpid = "s" + format(ev.host.port.dpid, "d")
 		port_no = ev.host.port.port_no
 		mac = ev.host.mac
 
 		self.hosts.setdefault(dpid, {})
 		self.hosts[dpid][port_no] = {"mac":mac, "status":1}
 		#print("host_add | hosts=", self.hosts)
+		self.switches.setdefault(dpid, {})
+		self.switches[dpid][port_no] = {"mac":mac, "status":1}
+
+		#print("host_add | switches=", self.switches)
+		self.output_dict()
 
 
 	@set_ev_cls(event.EventPortModify)
 	def _port_modify_handler(self, ev):
-		dpid = ev.port.dpid
+		dpid = "s" + format(ev.port.dpid, "d")
 		port_no = ev.port.port_no
 		status = 1 if ev.port.is_live() else 0
+
 		# Se o estado anterior for igual ao atual, não modifica nada
 		if (self.hosts[dpid][port_no]["status"] == status):
 			return 
 		self.hosts[dpid][port_no]["status"] = status
 		#print("port_mod | hosts=", self.hosts)
+		if (self.switches[dpid][port_no]["status"] == status):
+			return
+		self.switches[dpid][port_no]["status"] = status
+
+		#print("port_mod | switches=", self.switches)
 		self.output_dict()
 	
 	
 	@set_ev_cls(ofp_event.EventOFPPacketIn, MAIN_DISPATCHER)
 	def _packet_in_handler(self, ev):
-		# print("Hello!!")
 		msg = ev.msg
 		datapath = msg.datapath
 		ofproto = datapath.ofproto
@@ -92,14 +133,38 @@ class SimpleSwitchLogger(app_manager.RyuApp):
 			dic_final[switch_name] = clean_switch(switch_devices)
 		#print("Final")
 		#print(dic_final)
+		pkt = packet.Packet(msg.data)
 
-		now = datetime.now()
+		eth = pkt.get_protocols(ethernet.ethernet)[0]
+		ipv = pkt.get_protocols(ipv6.ipv6)[0]
 
-		current_time = now.strftime("%H:%M:%S")
-		f = open(current_time + ".txt", "a")
+		dpid = "s" + format(datapath.id, "d")
+		in_port = msg.match['in_port']
+		src_mac = eth.src
+		dst_mac = eth.dst
+		src_ip = ipv.src
+		dst_ip = ipv.dst
+
+		if src_mac in self.nametable:
+			hid = self.nametable[src_mac]
+		else:
+			hid = "h" + format(self.current_id, "d")
+			self.current_id += 1
+			self.nametable[src_mac] = hid
+
+		self.hosts[hid] = {"mac":src_mac, "ip":src_ip}
+
+		#print("packet_in | hosts=", self.hosts)
+
+
+	def output_dict(self):
+
+		dic_final = {"switches":self.switches, "hosts":self.hosts}
+
+		#current_time = datetime.now().strftime("%H:%M:%S")
+		f = open("topology_" + "test" + ".yaml", "w")
 		yaml.dump(dic_final, f)
-		yaml.dump(dic_final, sys.stdout)
-		last_entryes_number = current_entryes_number
+		#yaml.dump(dic_final, sys.stdout)
 		f.close()
 	
 	@set_ev_cls(event.EventSwitchBase)
