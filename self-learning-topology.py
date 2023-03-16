@@ -136,23 +136,25 @@ class SimpleSwitchLogger(app_manager.RyuApp):
 		pkt = packet.Packet(msg.data)
 
 		eth = pkt.get_protocols(ethernet.ethernet)[0]
-		ipv = pkt.get_protocols(ipv6.ipv6)[0]
+		#ipv = pkt.get_protocols(ipv6.ipv6)[0]
 
 		dpid = "s" + format(datapath.id, "d")
 		in_port = msg.match['in_port']
 		src_mac = eth.src
 		dst_mac = eth.dst
-		src_ip = ipv.src
-		dst_ip = ipv.dst
+		#src_ip = ipv.src
+		#dst_ip = ipv.dst
 
 		if src_mac in self.nametable:
 			hid = self.nametable[src_mac]
 		else:
-			hid = "h" + format(self.current_id, "d")
+			#hid = "h" + format(self.current_id, "d")
+			hid = "h" + src_mac[-2:]
 			self.current_id += 1
 			self.nametable[src_mac] = hid
 
-		self.hosts[hid] = {"mac":src_mac, "ip":src_ip}
+		#self.hosts[hid] = {"mac":src_mac, "ip":src_ip}
+		self.hosts[hid] = {"mac":src_mac}
 
 		#print("packet_in | hosts=", self.hosts)
 
