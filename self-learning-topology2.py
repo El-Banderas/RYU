@@ -77,7 +77,7 @@ class SimpleSwitchLogger(app_manager.RyuApp):
 		port_no = ev.port.port_no
 		status = 1 if ev.port.is_live() else 0
 		# Se o estado anterior for igual ao atual, não modifica nada
-		if self.hosts[dpid_name] is not None:
+		if self.hosts[dpid_name][port_no] is not None:
 			if (self.hosts[dpid_name][port_no]["status"] == status):
 				return 
 		self.hosts[dpid_name][port_no]["status"] = status	
@@ -128,14 +128,26 @@ class SimpleSwitchLogger(app_manager.RyuApp):
 		yaml.dump(dic_final, sys.stdout)
 		f.close()
 	
+	def get_dpid_MAC(self, find_mac):
+		for name, entry in self.hosts.items():
+			print(name)
+			for number_entry, mac_and_status in entry.items():
+				print(mac_and_status['mac'])
+				print(mac_and_status['mac'] == find_mac)
+				if mac_and_status['mac'] == find_mac:
+					return name
+		return "Unkown"
+			
+
 	def handle_hots_macs_ips(self):
 		dic_names = {}
 		for mac, ip in self.macs.items():
 			if ip is None:
-				number_thing = mac[-2:]
-				name_thing = "s"+str(number_thing)
-				dic_names[str(name_thing)] = None
-				dic_names[str(name_thing)] = mac
+				dpid_dwitch = self.get_dpid_MAC(mac)
+				dic_names.setdefault(dpid_dwitch, [])									
+				list_macs_switch = dic_names[dpid_dwitch] 
+				list_macs_switch.append(mac)
+				dic_names[dpid_dwitch] = list_macs_switch
 			else:
 				number_thing = mac[-2:]
 				name_thing = "h"+str(number_thing)
@@ -167,13 +179,13 @@ class SimpleSwitchLogger(app_manager.RyuApp):
 	def _print_event_default(self, ev):
 		#print("Evento")
 		#print(ev)
-		print("------------------")
-		print(self.output_dict())
-		print("------------------")
-		'''
+		#print("------------------")
+		#print(self.output_dict())
+		#print("------------------")
+		
 		print("------------------")
 		dic = self.handle_hots_macs_ips()
 		print(dic)
 		print("------------------")
-		'''
+		
 		return
