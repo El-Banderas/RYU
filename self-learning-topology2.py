@@ -119,13 +119,16 @@ class SimpleSwitchLogger(app_manager.RyuApp):
 
 		dic_final = {"switches":self.hosts, "hosts":self.handle_hots_macs_ips()}
 
+		print("******")
+		print(dic_final)
+		print("******")
 		#current_time = datetime.now().strftime("%H:%M:%S")
 		now = datetime.now()
 
 		current_time = now.strftime("%H:%M:%S")
-		f = open(current_time + ".txt", "a")
+		f = open(current_time + ".txt", "w")
 		yaml.dump(dic_final, f)
-		yaml.dump(dic_final, sys.stdout)
+		# yaml.dump(dic_final, sys.stdout)
 		f.close()
 	
 	def get_dpid_MAC(self, find_mac):
@@ -183,9 +186,9 @@ class SimpleSwitchLogger(app_manager.RyuApp):
 		#print(self.output_dict())
 		#print("------------------")
 		
-		print("------------------")
-		dic = self.handle_hots_macs_ips()
-		print(dic)
-		print("------------------")
+		#print("------------------")
+		#dic = self.handle_hots_macs_ips()
+		#print(dic)
+		#print("------------------")
 		
 		return
