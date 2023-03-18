@@ -43,8 +43,8 @@ class SimpleSwitch13(app_manager.RyuApp):
 		# 128, OVS will send Packet-In with invalid buffer_id and
 		# truncated packet data. In that case, we cannot output packets
 		# correctly.  The bug has been fixed in OVS v2.1.0.
-		match = parser.OFPMatch()
-		actions = [parser.OFPActionOutput(ofproto.OFPP_CONTROLLER,
+		match = parser.OFPMatch()										# Outro exemplo de FlowMode, quando não sabe o que fazer à mensagem, enviar ao controlador.
+		actions = [parser.OFPActionOutput(ofproto.OFPP_CONTROLLER,		# Também não deve guardar no buffer do equipamento.
 										  ofproto.OFPCML_NO_BUFFER)]
 		self.add_flow(datapath, 0, match, actions)
 
@@ -55,7 +55,7 @@ class SimpleSwitch13(app_manager.RyuApp):
 
 		inst = [parser.OFPInstructionActions(ofproto.OFPIT_APPLY_ACTIONS,
 											 actions)]
-		if buffer_id:
+		if buffer_id:				 											
 			mod = parser.OFPFlowMod(datapath=datapath, buffer_id=buffer_id,
 									priority=priority, match=match,
 									instructions=inst)
@@ -93,6 +93,7 @@ class SimpleSwitch13(app_manager.RyuApp):
 		# learn a mac address to avoid FLOOD next time.
 		self.mac_to_port[dpid][src] = in_port									# Como diz o comentário, adicionar entrada dpid -> ( mac_addr_src -> in_port )
 
+																				# Dois exemplos de  FLOWMods.
 		if dst in self.mac_to_port[dpid]:										# Caso destino esteja ligado ao mesmo switch/dpid, out_port = porta do destino, senão fazer flood
 			out_port = self.mac_to_port[dpid][dst]
 		else:
