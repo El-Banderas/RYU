@@ -6,7 +6,7 @@ from ryu.topology import event
 from ryu.controller import ofp_event
 from ryu.controller.handler import MAIN_DISPATCHER
 from ryu.lib.packet import ethernet, packet, ipv4
-import yaml
+from ruamel.yaml import YAML
 from datetime import datetime
 
 def clean_switch(switch_devices):
@@ -106,6 +106,8 @@ class SimpleSwitchLogger(app_manager.RyuApp):
 		#print("******")
 
 		f = open("topo_" + current_time + ".yml", "w")
+		yaml=YAML()
+		yaml.default_flow_style = False
 		yaml.dump(dic_final, f)
 		
 		f.close()
