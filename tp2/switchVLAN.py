@@ -64,6 +64,23 @@ class SimpleSwitch13(app_manager.RyuApp):
 									match=match, instructions=inst)
 		datapath.send_msg(mod)
 
+	def vlans_by_port(dpid, in_port, src_vlan): 						#retirar src?
+		acess_ports = []
+		trunk_ports = []
+		ports_of_pkt = [] #lista intermedia
+
+		for port_in_switch in port_vlan[dpid]:
+			vlans = port_vlan[dpid][port_in_switch]
+			if src_vlan in vlans and port_in_switch != in_port:
+				ports_of_pkt.append(port_in_switch)
+
+		for port in ports_of_pkt:
+			if port in acess_ports[dpid]:
+				acess_ports=
+		
+
+
+
 
 	@set_ev_cls(ofp_event.EventOFPPacketIn, MAIN_DISPATCHER)					# Definir handler de pacotes recebidos ( type of event this function is called for = ofp_event.EventOFPPacketIn) com o decorator 'set_ev_cls'
 	def _packet_in_handler(self, ev):
@@ -81,9 +98,20 @@ class SimpleSwitch13(app_manager.RyuApp):
 		pkt = packet.Packet(msg.data)											# Reconstruir pacote apartir de msg.data
 		eth = pkt.get_protocols(ethernet.ethernet)[0]							# "Ler" encapsulamento Ethernet
 
+		vlan_header= pkt.get_protocols(vlan.vlan)
+
+
+		if vlan_header is None:
+			is_vlan =  False
+			src_vlan = port_vlan[dpid][in_port][0] 								
+		else: 
+			is_vlan = True
+			src_vlan = vlan_header[0].vid
+
 		if eth.ethertype == ether_types.ETH_TYPE_LLDP:
 			# ignore lldp packet
 			return
+		
 		dst = eth.dst															# "Ler" mac_addr_dst
 		src = eth.src															# "Ler" mac_addr_src
 
