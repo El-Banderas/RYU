@@ -19,8 +19,8 @@ class Topo_1_1( Topo ):
         net = Mininet( controller=RemoteController, switch=OVSSwitch, waitConnected=True )
 
         info( "*** Creating controllers\n" )
-        c1 = net.addController( 'switchVLAN', port=6633 )
-        c2 = net.addController( 'LoadBalancer', port=6634 )
+        c1 = net.addController( 'switchVLAN', port=6653, ip='127.0.0.1' , protocols='OpenFlow13')
+        c2 = net.addController( 'LoadBalancer', port=6634,ip='127.0.0.1', protocols='OpenFlow13' )
 
 
         info( "*** Floor 3\n" )
@@ -82,6 +82,8 @@ class Topo_1_1( Topo ):
         switch2.start([c1])
         switch3.start([c1])
         switch0.start([c2])
+        CLI( net )
+        net.stop()
 
 
 
