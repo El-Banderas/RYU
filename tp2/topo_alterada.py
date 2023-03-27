@@ -1,5 +1,5 @@
 """
-ryu-manager ~/switchVLAN.py --ofp-tcp-listen-port 6633
+ryu-manager ~/switchVLAN.py --ofp-tcp-listen-port 6653
 ryu-manager ~/LoadBalancer.py --ofp-tcp-listen-port 6634
 sudo mn --custom ~/topo.py --topo 1-1 --controller=remote 
 """
@@ -53,25 +53,25 @@ class Topo_1_1( Topo ):
 
 
         info( "*** Creating links\n" )
-        net.addLink( switch0, switch1 )
-        net.addLink( switch1, switch2 )
-        net.addLink( switch2, switch3 )
+        net.addLink( switch0, switch1, 1 , 1 )
+        net.addLink( switch1, switch2, 2, 1 )
+        net.addLink( switch2, switch3 , 2, 1)
 
-        net.addLink( switch3, host33 )
-        net.addLink( switch3, host31 )
-        net.addLink( switch3, host32 )
+        net.addLink( switch3, host33, 2, 1 )
+        net.addLink( switch3, host31, 3, 1 )
+        net.addLink( switch3, host32, 4, 1 )
         
-        net.addLink( switch2, host23 )
-        net.addLink( switch2, host21 )
-        net.addLink( switch2, host22 )
+        net.addLink( switch2, host23, 3, 1 )
+        net.addLink( switch2, host21, 4, 1 )
+        net.addLink( switch2, host22 , 5, 1)
 
-        net.addLink( switch1, host13 )
-        net.addLink( switch1, host11 )
-        net.addLink( switch1, host12 )
+        net.addLink( switch1, host13, 3, 1 )
+        net.addLink( switch1, host11, 4, 1 )
+        net.addLink( switch1, host12, 5, 1)
 
-        net.addLink( switch0, server3 )
-        net.addLink( switch0, server1 )
-        net.addLink( switch0, server2 )
+        net.addLink( switch0, server3 ,2, 1)
+        net.addLink( switch0, server1 , 3, 1)
+        net.addLink( switch0, server2,4,1 )
 
 
         info( "*** Starting network\n" )
