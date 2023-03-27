@@ -22,6 +22,16 @@ from ryu.lib.packet import packet
 from ryu.lib.packet import ethernet
 from ryu.lib.packet import ether_types
 
+port_vlan = {3:{1:[10, 20, 30],2:[30],3:[10],4:[20]},
+	        2:{1:[10,20,30],2:[10, 20, 30],3:[30],4:[10], 5:[20]},
+	        1:{1:[10,20,30],2:[10, 20, 30],3:[30],4:[10], 5:[20]}
+    
+        }  #port_vlan[a][b]=c => 'a'= dpid, 'b'= port number,'c'= VLAN ID
+									
+access= {3:[2,3,4],2:[3,4,5], 1:[3,4,5]}			#access[a]=[B] => 'a' = dpid ,'[B]'=List of ports configured as Access Ports
+
+trunk = {3:[1],2:[1,2], 1:[1,2]}				#trunk[a]=[B] => 'a' = dpid ,'[B]'=List of ports configured as Trunk Ports
+
 
 class SimpleSwitch13(app_manager.RyuApp):
 	OFP_VERSIONS = [ofproto_v1_3.OFP_VERSION]
