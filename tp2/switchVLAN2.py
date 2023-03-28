@@ -104,18 +104,18 @@ class VlanSwitch13(app_manager.RyuApp):
         return actions
 
     def getActionsArrayAccess(self, out_port_access, out_port_trunk, src_vlan, parser, dpid, in_port):
-        print("Info, out port access: " , out_port_access)
-        print("out port trunk: " , out_port_trunk)
-        print("src vlan: " , src_vlan)
-        print("dpid: " , dpid)
-        print("in port " , in_port)
+        print("Info, out port access: ", out_port_access)
+        print("out port trunk: ", out_port_trunk)
+        print("src vlan: ", src_vlan)
+        print("dpid: ", dpid)
+        print("in port ", in_port)
         actions = []
 
         for port in out_port_access:
             actions.append(parser.OFPActionOutput(port))
 
         actions.append(parser.OFPActionPushVlan(33024))
-        actions.append(parser.OFPActionSetField(vlan_vid=src_vlan))
+        actions.append(parser.OFPActionSetField(vlan_vid=(0x1000 | src_vlan)))
 
         for port in out_port_trunk:
             actions.append(parser.OFPActionOutput(port))
@@ -245,8 +245,7 @@ class VlanSwitch13(app_manager.RyuApp):
         datapath.send_msg(out)
         return
         '''
-#Apagar#			
-
+# Apagar#
 
         # IF OUT PORT IS KNOWN
         if out_port_unknown != 1:
@@ -267,7 +266,7 @@ class VlanSwitch13(app_manager.RyuApp):
                 print("Access->Trunk")
                 match = parser.OFPMatch(in_port=in_port, eth_dst=dst)
                 actions = [parser.OFPActionPushVlan(33024), parser.OFPActionSetField(
-                    vlan_vid=src_vlan), parser.OFPActionOutput(out_port)]
+                    vlan_vid=(0x1000 | src_vlan)), parser.OFPActionOutput(out_port)]
             else:
                 print("Access->Access")
                 match = parser.OFPMatch(in_port=in_port, eth_dst=dst)
