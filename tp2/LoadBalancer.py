@@ -1,37 +1,33 @@
 from ryu.base import app_manager
-from ryu.app.wsgi import ControllerBase, WSGIApplication
 from ryu.controller import ofp_event
 from ryu.controller.handler import CONFIG_DISPATCHER, MAIN_DISPATCHER, set_ev_cls
 from ryu.ofproto import ofproto_v1_3
 from ryu.lib.packet import packet, ethernet, ether_types, ipv4, tcp, arp
 from ryu.ofproto import ofproto_v1_3, ether, inet
-from netaddr import IPNetwork, IPAddress
-
 
 
 IDLE_TIME = 10
+
+wan_port = 1
+nat_public_ip = "10.0.10.100"
+nat_private_ip = "10.0.10.100"
+
+servers = ["10.0.10.101", "10.0.10.102", "10.0.10.103"]
+IP_TO_MAC_TABLE = {
+	"10.0.10.101": 3,
+	"10.0.10.102": 4,
+	"10.0.10.103": 2
+}
+
 
 class LoadBalancer(app_manager.RyuApp):
 	OFP_VERSIONS = [ofproto_v1_3.OFP_VERSION]
 
 	def __init__(self, *args, **kwargs):
 		super(LoadBalancer, self).__init__(*args, **kwargs)
-				
-		self.nat_settings = settings.load()
-
-		self.wan_port = nat_settings['wan_port']
-
-		self.gateway = str(nat_settings['default_gateway'])
-
-		self.nat_public_ip = str(nat_settings['nat_public_ip'])
-		self.nat_private_ip = nat_settings['dhcp_gw_addr']
-
-		self.private_subnetwork = nat_settings['ip_network']
-
-		self.MAC_ON_WAN = nat_settings['MAC_ON_WAN']
-		self.MAC_ON_LAN = nat_settings['MAC_ON_LAN']
 
 		self.current_port = -1 # TODO: Port pool
+		self.current_server_idx = -1
 
 
 	@set_ev_cls(ofp_event.EventOFPSwitchFeatures, CONFIG_DISPATCHER)
@@ -85,14 +81,20 @@ class LoadBalancer(app_manager.RyuApp):
 		return self.current_port
 
 
+	def _get_next_server_ip(self):
+		self.current_server_idx += 1
+		self.current_server_idx %= len(servers)
+		return servers[self.current_server_idx]
+
+
 	# Flow removido por timeout; porta fica disponível outra vez
 	@set_ev_cls(ofp_event.EventOFPFlowRemoved, MAIN_DISPATCHER)
 	def flow_removed_handler(self, ev):
-		
 		msg = ev.msg
 		tcp_port = msg.match.get('tcp_dst')
 
-		# TODO
+		# TODO: re-adicionar porta à port pool
+
 
 	def _send_packet_to_port(self, datapath, port, data):
 		if data is None:
@@ -100,8 +102,9 @@ class LoadBalancer(app_manager.RyuApp):
 			return
 		ofproto = datapath.ofproto
 		parser = datapath.ofproto_parser
+
 		actions = [parser.OFPActionOutput(port=port)]
-		# self.logger.info("packet-out %s" % (data,))
+
 		out = parser.OFPPacketOut(datapath=datapath,
 								  buffer_id=ofproto.OFP_NO_BUFFER,
 								  in_port=ofproto.OFPP_CONTROLLER,
@@ -118,7 +121,7 @@ class LoadBalancer(app_manager.RyuApp):
 			# Who has 192.168.8.1 ?
 			# Tell 192.168.8.20(Host),
 			# 192.168.8.1's fake MAC address (eth1)
-			data = nat_helper.arp_reply(src_mac=self.MAC_ON_LAN,
+			data = arp_reply(src_mac=self.MAC_ON_LAN,
 										src_ip=str(self.nat_private_ip),
 										target_mac=pkt_arp.src_mac,
 										target_ip=pkt_arp.src_ip)
@@ -126,35 +129,18 @@ class LoadBalancer(app_manager.RyuApp):
 		elif pkt_arp.dst_ip == self.nat_public_ip:
 			# Who has 140.114.71.176 ?
 			# Tell 140.114.71.xxx(Extranet Network host)
-			data = nat_helper.arp_reply(src_mac=self.MAC_ON_WAN,
+			data = arp_reply(src_mac=self.MAC_ON_WAN,
 										src_ip=self.nat_public_ip,
 										target_mac=pkt_arp.src_mac,
 										target_ip=pkt_arp.src_ip)
 
 		return data
 
-	def _arp_reply_handler(self, pkt_arp):
-		if pkt_arp.opcode != arp.ARP_REPLY:
-			print('[WARRING] Wrong ARP opcode!')
-			return None
 
+	def _arp_reply_handler(self, pkt_arp):
 		if pkt_arp.dst_ip == self.nat_public_ip:
 			IP_TO_MAC_TABLE[pkt_arp.src_ip] = pkt_arp.src_mac
 
-	def _in_nat_public_ip_subnetwork(self, ip):
-		ip = IPAddress(ip)
-		if ip in IPNetwork('127.0.0.0/24'):
-			return True
-		else:
-			return False
-
-	def _in_private_subnetwork(self, ip):
-		ip = IPAddress(ip)
-		return ip in self.private_subnetwork
-
-	def _is_public(self, ip):
-		ip = IPAddress(ip)
-		return ip.is_unicast() and not ip.is_private()
 
 	def _private_to_public(self, datapath, buffer_id, data, in_port, out_port,
 						   pkt_ip, pkt_ethernet, pkt_tcp=None, pkt_udp=None,
@@ -171,16 +157,9 @@ class LoadBalancer(app_manager.RyuApp):
 		ipv4_dst = pkt_ip.dst
 
 		nat_port = self._get_available_port()
-
-		if (self._is_public(ipv4_dst) and not self._in_nat_public_ip_subnetwork(ipv4_dst)):
-			target_ip = self.gateway
-		elif self._in_nat_public_ip_subnetwork(ipv4_dst):
-			target_ip = ipv4_dst
-		elif self._in_private_subnetwork(ipv4_dst):
-			return
+		target_ip = self._get_next_server_ip()
 
 		if pkt_tcp:
-			# print "@@@ Install TCP Flow Entry @@@"
 			tcp_src = pkt_tcp.src_port
 			tcp_dst = pkt_tcp.dst_port
 
@@ -209,7 +188,6 @@ class LoadBalancer(app_manager.RyuApp):
 							parser.OFPActionSetField(tcp_dst=tcp_src),
 							parser.OFPActionOutput(in_port)]
 		elif pkt_udp:
-			# print "@@@ Install UDP Flow Entry @@@"
 			udp_src = pkt_udp.src_port
 			udp_dst = pkt_udp.dst_port
 
@@ -241,9 +219,9 @@ class LoadBalancer(app_manager.RyuApp):
 			pass
 
 		self.add_flow(datapath, match=match, actions=actions,
-					  idle_timeout=self.IDLE_TIME, priority=10)
+					  idle_timeout=IDLE_TIME, priority=10)
 		self.add_flow(datapath, match=match_back, actions=actions_back,
-					  idle_timeout=self.IDLE_TIME, priority=10)
+					  idle_timeout=IDLE_TIME, priority=10)
 
 		d = None
 		if buffer_id == ofproto.OFP_NO_BUFFER:
@@ -252,6 +230,7 @@ class LoadBalancer(app_manager.RyuApp):
 		out = parser.OFPPacketOut(datapath=datapath, buffer_id=buffer_id,
 								  in_port=in_port, actions=actions, data=d)
 		datapath.send_msg(out)
+
 
 	@set_ev_cls(ofp_event.EventOFPPacketIn, MAIN_DISPATCHER)
 	def _packet_in_handler(self, ev):
@@ -264,10 +243,8 @@ class LoadBalancer(app_manager.RyuApp):
 
 		pkt_ethernet = pkt.get_protocol(ethernet.ethernet)
 		pkt_arp = pkt.get_protocol(arp.arp)
-		# pkt_icmp = pkt.get_protocol(icmp.icmp)
 		pkt_ip = pkt.get_protocol(ipv4.ipv4)
 		pkt_tcp = pkt.get_protocol(tcp.tcp)
-		pkt_udp = pkt.get_protocol(udp.udp)
 
 		if in_port == self.wan_port:
 			# Packets from WAN port
@@ -283,13 +260,6 @@ class LoadBalancer(app_manager.RyuApp):
 		else:
 			# Packets from LAN port
 			if pkt_ip:
-
-				if (self._in_private_subnetwork(pkt_ip.dst) and pkt_ip.dst != str(self.private_subnetwork[1])):
-					# print "Private network %s" %pkt_ip.dst
-					# These packets are private network
-					# l2switch will handle it
-					return
-
 				ip_dst = pkt_ip.dst
 				if (self._is_public(ip_dst) and
 					not self._in_nat_public_ip_subnetwork(ip_dst)):
@@ -302,7 +272,7 @@ class LoadBalancer(app_manager.RyuApp):
 					return
 
 				# Sending ARP request to Gateway
-				arp_req_pkt = nat_helper.broadcast_arp_request(src_mac=self.MAC_ON_WAN,
+				arp_req_pkt = broadcast_arp_request(src_mac=self.MAC_ON_WAN,
 															   src_ip=self.nat_public_ip,
 															   target_ip=target_ip)
 				self._send_packet_to_port(datapath, self.wan_port, arp_req_pkt)
@@ -317,16 +287,6 @@ class LoadBalancer(app_manager.RyuApp):
 												pkt_ethernet=pkt_ethernet,
 												pkt_ip=pkt_ip,
 												pkt_tcp=pkt_tcp)
-				elif pkt_udp:
-					if target_ip in IP_TO_MAC_TABLE:
-						self._private_to_public(datapath=datapath,
-												buffer_id=msg.buffer_id,
-												data=msg.data,
-												in_port=in_port,
-												out_port=self.wan_port,
-												pkt_ethernet=pkt_ethernet,
-												pkt_ip=pkt_ip,
-												pkt_udp=pkt_udp)
 			elif pkt_arp:
 				if pkt_arp.opcode == arp.ARP_REQUEST:
 					arp_reply_pkt = self._arp_request_handler(pkt_arp)
