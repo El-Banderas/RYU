@@ -68,6 +68,7 @@ class VlanSwitch13(app_manager.RyuApp):
                                     match=match, instructions=inst)
         datapath.send_msg(mod)
 
+    # Rita, depois põe a retornar as portas de acesso e trunk, em vez de guardar no self
     def vlan_members(self, dpid, in_port, src_vlan):
 
         B = []
@@ -76,7 +77,7 @@ class VlanSwitch13(app_manager.RyuApp):
 
         if src_vlan == "NULL":
             return
-
+	# E acho que dá para juntar estes dois fors, aqui podes logo verificar se é de acesso ou trunk
         for item in port_vlan[dpid]:
             vlans = port_vlan[dpid][item]
             if src_vlan in vlans and item != in_port:
@@ -158,14 +159,16 @@ class VlanSwitch13(app_manager.RyuApp):
         eth = pkt.get_protocols(ethernet.ethernet)[0]
         # If packet is tagged,then this will have non-null value
         vlan_header = pkt.get_protocols(vlan.vlan)
-
+	# Aqui também há casos que acho que se pode tirar, eu marquei-os
         if eth.ethertype == ether_types.ETH_TYPE_8021Q:  # Checking for VLAN Tagged Packet
             vlan_header_present = 1
             src_vlan = vlan_header[0].vid
+	# Necessário, o de baixo?
         elif dpid not in port_vlan:
             vlan_header_present = 0
             in_port_type = "NORMAL SWITCH "  # NORMAL NON-VLAN L2 SWITCH
             src_vlan = "NULL"
+	# Necessário?
         elif port_vlan[dpid][in_port][0] == " " or in_port in trunk[dpid]:
             vlan_header_present = 0
             in_port_type = "NORMAL UNTAGGED"  # NATIVE VLAN PACKET
@@ -190,6 +193,7 @@ class VlanSwitch13(app_manager.RyuApp):
         # learn a mac address to avoid FLOOD next time.
         self.mac_to_port[dpid][src] = in_port
         # Determine which ports are members of in_port's VLAN
+	# Rita, aqui passa a devolver o par das portas de acesso e trunk
         self.vlan_members(dpid, in_port, src_vlan)
         out_port_type = " "
 
@@ -246,7 +250,7 @@ class VlanSwitch13(app_manager.RyuApp):
         return
         '''
 # Apagar#
-
+	# Aqui ver que casos dá para tirar, tipo switchs normais e assim
         # IF OUT PORT IS KNOWN
         if out_port_unknown != 1:
             # If VLAN Tagged and needs to be sent out through ACCESS port
