@@ -8,11 +8,13 @@ from ryu.ofproto import ofproto_v1_3, ether, inet
 
 IDLE_TIME = 10
 
-wan_port = 1
-nat_public_ip = "10.0.10.100"
-nat_private_ip = "10.0.10.100"
+WAN_PORT = 1
+NAT_PUBLIC_IP = "10.0.10.100"
+NAT_PRIVATE_IP = "10.0.10.100"
+NAT_PUBLIC_MAC = "10.0.10.100"
+NAT_PRIVATE_MAC = "10.0.10.100"
 
-servers = ["10.0.10.101", "10.0.10.102", "10.0.10.103"]
+SERVERS = ["10.0.10.101", "10.0.10.102", "10.0.10.103"]
 IP_TO_MAC_TABLE = {
 	"10.0.10.101": '00:00:00:00:01:01',
 	"10.0.10.102": '00:00:00:00:01:02',
@@ -88,8 +90,8 @@ class LoadBalancer(app_manager.RyuApp):
 
 	def _get_next_server_ip(self):
 		self.current_server_idx += 1
-		self.current_server_idx %= len(servers)
-		return servers[self.current_server_idx]
+		self.current_server_idx %= len(SERVERS)
+		return SERVERS[self.current_server_idx]
 
 
 	# Flow removido por timeout; porta fica disponível outra vez
@@ -115,24 +117,33 @@ class LoadBalancer(app_manager.RyuApp):
 		datapath.send_msg(out)
 
 
-	def _private_to_public(self, datapath, buffer_id, data, in_port, out_port,
+	def _private_to_public(self, datapath, buffer_id, data,
 						   pkt_ip, pkt_ethernet, pkt_tcp):
 
 		parser = datapath.ofproto_parser
 		ofproto = datapath.ofproto
 
-		eth_dst = pkt_ethernet.dst
+		eth_dst = pkt_ethernet.dst # == NAT_PUBLIC_MAC
 		eth_src = pkt_ethernet.src
 		ipv4_src = pkt_ip.src
-		ipv4_dst = pkt_ip.dst
-
-		nat_port = self._get_available_port()
-		target_ip = self._get_next_server_ip()
-
+		ipv4_dst = pkt_ip.dst # == NAT_PUBLIC_IP
 		tcp_src = pkt_tcp.src_port
 		tcp_dst = pkt_tcp.dst_port
 
-		match = parser.OFPMatch(in_port=in_port,
+		
+		nat_port = self._get_available_port()
+		target_ip = self._get_next_server_ip()
+
+		nat_eth_dst = IP_TO_MAC_TABLE[target_ip]
+		nat_eth_src = NAT_PRIVATE_MAC
+		nat_ipv4_src = NAT_PRIVATE_IP
+		nat_ipv4_dst = target_ip
+		nat_tcp_src = nat_port
+		nat_tcp_dst = tcp_dst
+
+		out_port = IP_TO_PORT_TABLE[target_ip]
+
+		match = parser.OFPMatch(in_port=WAN_PORT,
 								eth_type=ether.ETH_TYPE_IP,
 								ip_proto=inet.IPPROTO_TCP,
 								ipv4_src=ipv4_src,
@@ -140,22 +151,29 @@ class LoadBalancer(app_manager.RyuApp):
 								tcp_src=tcp_src,
 								tcp_dst=tcp_dst)
 
-		actions = [parser.OFPActionSetField(eth_dst=IP_TO_MAC_TABLE[target_ip]),
-					parser.OFPActionSetField(ipv4_src=self.nat_public_ip),
-					parser.OFPActionSetField(tcp_src=nat_port),
+		actions = [	parser.OFPActionSetField(eth_dst=nat_eth_dst),
+	     			parser.OFPActionSetField(eth_src=nat_eth_src),
+					parser.OFPActionSetField(ipv4_src=nat_ipv4_src),
+					parser.OFPActionSetField(ipv4_dst=nat_ipv4_dst),
+					parser.OFPActionSetField(tcp_src=nat_tcp_src),
+					parser.OFPActionSetField(tcp_dst=nat_tcp_dst),
 					parser.OFPActionOutput(out_port)]
 
-		match_back = parser.OFPMatch(eth_type=ether.ETH_TYPE_IP,
+		match_back = parser.OFPMatch(	in_port=out_port,
+			       						eth_type=ether.ETH_TYPE_IP,
 										ip_proto=inet.IPPROTO_TCP,
-										ipv4_src=ipv4_dst,
-										ipv4_dst=self.nat_public_ip,
-										tcp_src=tcp_dst,
-										tcp_dst=nat_port)
+										ipv4_src=nat_ipv4_dst,
+										ipv4_dst=nat_ipv4_src,
+										tcp_src=nat_tcp_dst,
+										tcp_dst=nat_tcp_src)
 
 		actions_back = [parser.OFPActionSetField(eth_dst=eth_src),
+						parser.OFPActionSetField(eth_src=eth_dst),
+						parser.OFPActionSetField(ipv4_src=ipv4_dst),
 						parser.OFPActionSetField(ipv4_dst=ipv4_src),
+						parser.OFPActionSetField(tcp_src=tcp_dst),
 						parser.OFPActionSetField(tcp_dst=tcp_src),
-						parser.OFPActionOutput(in_port)]
+						parser.OFPActionOutput(WAN_PORT)]
 		
 
 		self.add_flow(datapath, match=match, actions=actions,
@@ -168,7 +186,7 @@ class LoadBalancer(app_manager.RyuApp):
 			d = data
 
 		out = parser.OFPPacketOut(datapath=datapath, buffer_id=buffer_id,
-								  in_port=in_port, actions=actions, data=d)
+								  in_port=WAN_PORT, actions=actions, data=d)
 		datapath.send_msg(out)
 
 
@@ -188,21 +206,12 @@ class LoadBalancer(app_manager.RyuApp):
 
 		if in_port == self.wan_port:
 			# Packets from WAN port
-			#TODO
-			pass
+			self._private_to_public(datapath=datapath,
+									buffer_id=msg.buffer_id,
+									data=msg.data,
+									pkt_ethernet=pkt_ethernet,
+									pkt_ip=pkt_ip,
+									pkt_tcp=pkt_tcp)
 		else:
 			# Packets from LAN
-			ip_dst = pkt_ip.dst
-
-			# ip_dst of packet is public ip and on Internet
-			target_ip = nat_private_ip
-
-			if target_ip in IP_TO_MAC_TABLE:
-				self._private_to_public(datapath=datapath,
-										buffer_id=msg.buffer_id,
-										data=msg.data,
-										in_port=in_port,
-										out_port=self.wan_port,
-										pkt_ethernet=pkt_ethernet,
-										pkt_ip=pkt_ip,
-										pkt_tcp=pkt_tcp)
+			pass #TODO: Might be a problem
