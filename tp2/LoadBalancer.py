@@ -122,7 +122,8 @@ class LoadBalancer(app_manager.RyuApp):
 
 		parser = datapath.ofproto_parser
 		ofproto = datapath.ofproto
-
+		# Eu acho que aqui estás a fazer o cenário de public to private :eyes:
+		# Porque o primeiro match que fazes é de public
 		eth_dst = pkt_ethernet.dst # == NAT_PUBLIC_MAC
 		eth_src = pkt_ethernet.src
 		ipv4_src = pkt_ip.src
@@ -215,3 +216,5 @@ class LoadBalancer(app_manager.RyuApp):
 		else:
 			# Packets from LAN
 			pass #TODO: Might be a problem
+			# Acho que sim, porque as comunicações normalmente começam pelos pc's.
+			# Pode-se é verificar se o ip de destino é a public port do router? Se sim, fazer public_to_private, que se calhar vai substituir a private_to_public
