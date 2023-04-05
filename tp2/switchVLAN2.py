@@ -71,23 +71,21 @@ class VlanSwitch13(app_manager.RyuApp):
     # Rita, depois põe a retornar as portas de acesso e trunk, em vez de guardar no self
     def vlan_members(self, dpid, in_port, src_vlan):
 
-        B = []
-        self.access_ports = []
-        self.trunk_ports = []
+        access_ports = []
+        trunk_ports = []
 
         if src_vlan == "NULL":
-            return
-	# E acho que dá para juntar estes dois fors, aqui podes logo verificar se é de acesso ou trunk
+            return access_ports, trunk_ports
+
+        # E acho que dá para juntar estes dois fors, aqui podes logo verificar se é de acesso ou trunk
         for item in port_vlan[dpid]:
             vlans = port_vlan[dpid][item]
             if src_vlan in vlans and item != in_port:
-                B.append(item)
-
-        for port in B:
-            if port in access[dpid]:
-                self.access_ports.append(port)
-            else:
-                self.trunk_ports.append(port)
+                if item in access[dpid]:
+                    access_ports.append(item)
+                else:
+                    trunk_ports.append(item)
+        return access_ports, trunk_ports
 
 # ---------------------------------------------------------------#
 
@@ -159,20 +157,13 @@ class VlanSwitch13(app_manager.RyuApp):
         eth = pkt.get_protocols(ethernet.ethernet)[0]
         # If packet is tagged,then this will have non-null value
         vlan_header = pkt.get_protocols(vlan.vlan)
-	# Aqui também há casos que acho que se pode tirar, eu marquei-os
+        # Aqui também há casos que acho que se pode tirar, eu marquei-os
         if eth.ethertype == ether_types.ETH_TYPE_8021Q:  # Checking for VLAN Tagged Packet
             vlan_header_present = 1
             src_vlan = vlan_header[0].vid
-	# Necessário, o de baixo?
-        elif dpid not in port_vlan:
+        elif in_port in trunk[dpid]:
             vlan_header_present = 0
-            in_port_type = "NORMAL SWITCH "  # NORMAL NON-VLAN L2 SWITCH
-            src_vlan = "NULL"
-	# Necessário?
-        elif port_vlan[dpid][in_port][0] == " " or in_port in trunk[dpid]:
-            vlan_header_present = 0
-            in_port_type = "NORMAL UNTAGGED"  # NATIVE VLAN PACKET
-            src_vlan = "NULL"
+            src_vlan = "NULL" # a porta de entrada é uma porta trunk e não está associada a uma VLAN específica
         else:
             vlan_header_present = 0
             # STORE VLAN ASSOCIATION FOR THE IN PORT
@@ -193,8 +184,8 @@ class VlanSwitch13(app_manager.RyuApp):
         # learn a mac address to avoid FLOOD next time.
         self.mac_to_port[dpid][src] = in_port
         # Determine which ports are members of in_port's VLAN
-	# Rita, aqui passa a devolver o par das portas de acesso e trunk
-        self.vlan_members(dpid, in_port, src_vlan)
+        # Rita, aqui passa a devolver o par das portas de acesso e trunk
+        access_ports, trunk_ports = self.vlan_members(dpid, in_port, src_vlan)
         out_port_type = " "
 
         if dst in self.mac_to_port[dpid]:  # MAC ADDRESS TABLE CREATION
@@ -205,14 +196,12 @@ class VlanSwitch13(app_manager.RyuApp):
                     out_port_type = "ACCESS"
                 else:
                     out_port_type = "TRUNK"
-            else:
-                out_port_type = "NORMAL"
         else:
             out_port_unknown = 1
             # List of All Access Ports Which are Members of Same VLAN (to Flood the Traffic)
-            out_port_access = self.access_ports
+            out_port_access = access_ports
             # List of All Trunk  Ports Which are Members of Same VLAN (to Flood the Traffic)
-            out_port_trunk = self.trunk_ports
+            out_port_trunk = trunk_ports
 
 
 #########################################  -----FLOW ENTRY ADDITION SEGMENT    ----###############################################
@@ -250,7 +239,7 @@ class VlanSwitch13(app_manager.RyuApp):
         return
         '''
 # Apagar#
-	# Aqui ver que casos dá para tirar, tipo switchs normais e assim
+        # Aqui ver que casos dá para tirar, tipo switchs normais e assim
         # IF OUT PORT IS KNOWN
         if out_port_unknown != 1:
             # If VLAN Tagged and needs to be sent out through ACCESS port
@@ -297,23 +286,13 @@ class VlanSwitch13(app_manager.RyuApp):
                 match = parser.OFPMatch(in_port=in_port, eth_dst=dst)
                 actions = self.getActionsArrayAccess(
                     out_port_access, out_port_trunk, src_vlan, parser, dpid, in_port)
-            # IF UNTAGGED AND BELONGING TO NATIVE VLAN (CAPTURED ON A VLAN AWARE SWITCH)
-            elif in_port_type == "NORMAL UNTAGGED":
-                print("Acho que não devia aparecer")
-                match = parser.OFPMatch(in_port=in_port, eth_dst=dst)
-                actions = self.getActionsNormalUntagged(dpid, in_port, parser)
-            else:
-                print("SWITCH normal")
-                # FOR NORMAL NON-VLAN L2 SWITCH
-                actions = [parser.OFPActionOutput(ofproto.OFPP_FLOOD)]
-                match = parser.OFPMatch(in_port=in_port, eth_dst=dst)
-                print("Não devia aparecer isto!!!")
 
             if msg.buffer_id != ofproto.OFP_NO_BUFFER:
                 self.add_flow(datapath, 1, match, actions, msg.buffer_id)
                 return
             else:
                 self.add_flow(datapath, 1, match, actions)
+
         data = None
         if msg.buffer_id == ofproto.OFP_NO_BUFFER:
             data = msg.data
