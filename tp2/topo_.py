@@ -8,6 +8,11 @@ from mininet.log import setLogLevel, info
 ryu-manager ~/switchVLAN.py --ofp-tcp-listen-port 6633
 ryu-manager ~/LoadBalancer.py --ofp-tcp-listen-port 6634
 sudo python2.7 -E topo.py
+
+
+h01 python -m server1.py 80 html1.html &
+h02 python -m server1.py 80 html2.html &
+h03 python -m server1.py 80 html3.html &
 """
 
 def TP2():
@@ -80,7 +85,7 @@ def TP2():
 	switch0.start([c2])
 
 	info( "*** Testing network\n" )
-	net.pingAll()
+	#net.pingAll()
 
 	info( "*** Running CLI\n" )
 	CLI(net)
