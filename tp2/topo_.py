@@ -81,9 +81,9 @@ def TP2():
 	switch3.start([c1])
 	switch0.start([c2])
 
-	server1.cmd("python3 -m http.server 80 &")
-	server2.cmd("python3 -m http.server 80 &")
-	server3.cmd("python3 -m http.server 80 &")
+	server1.cmd("python3 -m server1.py 80 html1.html &")
+	server2.cmd("python3 -m server1.py 80 html2.html &")
+	server3.cmd("python3 -m server1.py 80 html3.html &")
 
 
 	info( "*** Testing network\n" )
