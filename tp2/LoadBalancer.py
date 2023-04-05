@@ -32,6 +32,8 @@ class LoadBalancer(app_manager.RyuApp):
 
 	def __init__(self, *args, **kwargs):
 		super(LoadBalancer, self).__init__(*args, **kwargs)
+		
+		self.mac_to_port = {}
 
 		self.current_port = -1 # TODO: Port pool
 		self.current_server_idx = -1
@@ -100,6 +102,8 @@ class LoadBalancer(app_manager.RyuApp):
 		msg = ev.msg
 		tcp_port = msg.match.get('tcp_dst')
 
+		print("flow removed: " + ev)
+
 		# TODO: re-adicionar porta à port pool
 
 
@@ -117,15 +121,14 @@ class LoadBalancer(app_manager.RyuApp):
 		datapath.send_msg(out)
 
 
-	def _private_to_public(self, datapath, buffer_id, data,
+	def _public_to_private(self, datapath, buffer_id, data,
 						   pkt_ip, pkt_ethernet, pkt_tcp):
 
 		parser = datapath.ofproto_parser
 		ofproto = datapath.ofproto
-		# Eu acho que aqui estás a fazer o cenário de public to private :eyes:
-		# Porque o primeiro match que fazes é de public
-		eth_dst = pkt_ethernet.dst # == NAT_PUBLIC_MAC
+		
 		eth_src = pkt_ethernet.src
+		eth_dst = pkt_ethernet.dst # == NAT_PUBLIC_MAC
 		ipv4_src = pkt_ip.src
 		ipv4_dst = pkt_ip.dst # == NAT_PUBLIC_IP
 		tcp_src = pkt_tcp.src_port
@@ -135,46 +138,74 @@ class LoadBalancer(app_manager.RyuApp):
 		nat_port = self._get_available_port()
 		target_ip = self._get_next_server_ip()
 
-		nat_eth_dst = IP_TO_MAC_TABLE[target_ip]
+		"""
 		nat_eth_src = NAT_PRIVATE_MAC
+		nat_eth_dst = IP_TO_MAC_TABLE[target_ip]
 		nat_ipv4_src = NAT_PRIVATE_IP
 		nat_ipv4_dst = target_ip
 		nat_tcp_src = nat_port
 		nat_tcp_dst = tcp_dst
+		"""
+
+		nat_eth_src = eth_src
+		nat_eth_dst = IP_TO_MAC_TABLE[target_ip]
+		nat_ipv4_src = ipv4_src
+		nat_ipv4_dst = target_ip
+		nat_tcp_src = tcp_src
+		nat_tcp_dst = tcp_dst
 
 		out_port = IP_TO_PORT_TABLE[target_ip]
 
-		match = parser.OFPMatch(in_port=WAN_PORT,
+		print(
+			f"""
+			eth_src: {eth_src} -> {nat_eth_src}
+			eth_dst: {eth_dst} -> {nat_eth_dst}
+			ipv4_src: {ipv4_src} -> {nat_ipv4_src}
+			ipv4_dst: {ipv4_dst} -> {nat_ipv4_dst}
+			tcp_src: {tcp_src} -> {nat_tcp_src}
+			tcp_dst: {tcp_dst} -> {nat_tcp_dst}
+			"""
+		)
+
+		match = parser.OFPMatch(
+								in_port=WAN_PORT,
 								eth_type=ether.ETH_TYPE_IP,
 								ip_proto=inet.IPPROTO_TCP,
 								ipv4_src=ipv4_src,
 								ipv4_dst=ipv4_dst,
 								tcp_src=tcp_src,
-								tcp_dst=tcp_dst)
+								tcp_dst=tcp_dst
+								)
 
-		actions = [	parser.OFPActionSetField(eth_dst=nat_eth_dst),
+		actions = [
+					parser.OFPActionSetField(eth_dst=nat_eth_dst),
 	     			parser.OFPActionSetField(eth_src=nat_eth_src),
 					parser.OFPActionSetField(ipv4_src=nat_ipv4_src),
 					parser.OFPActionSetField(ipv4_dst=nat_ipv4_dst),
-					parser.OFPActionSetField(tcp_src=nat_tcp_src),
-					parser.OFPActionSetField(tcp_dst=nat_tcp_dst),
-					parser.OFPActionOutput(out_port)]
+					#parser.OFPActionSetField(tcp_src=nat_tcp_src),
+					#parser.OFPActionSetField(tcp_dst=nat_tcp_dst),
+					parser.OFPActionOutput(out_port)
+					]
 
-		match_back = parser.OFPMatch(	in_port=out_port,
-			       						eth_type=ether.ETH_TYPE_IP,
-										ip_proto=inet.IPPROTO_TCP,
-										ipv4_src=nat_ipv4_dst,
-										ipv4_dst=nat_ipv4_src,
-										tcp_src=nat_tcp_dst,
-										tcp_dst=nat_tcp_src)
+		match_back = parser.OFPMatch(	
+									in_port=out_port,
+									eth_type=ether.ETH_TYPE_IP,
+									ip_proto=inet.IPPROTO_TCP,
+									ipv4_src=nat_ipv4_dst,
+									ipv4_dst=nat_ipv4_src,
+									tcp_src=nat_tcp_dst,
+									tcp_dst=nat_tcp_src
+									)
 
-		actions_back = [parser.OFPActionSetField(eth_dst=eth_src),
+		actions_back = [
+						parser.OFPActionSetField(eth_dst=eth_src),
 						parser.OFPActionSetField(eth_src=eth_dst),
 						parser.OFPActionSetField(ipv4_src=ipv4_dst),
 						parser.OFPActionSetField(ipv4_dst=ipv4_src),
-						parser.OFPActionSetField(tcp_src=tcp_dst),
-						parser.OFPActionSetField(tcp_dst=tcp_src),
-						parser.OFPActionOutput(WAN_PORT)]
+						#parser.OFPActionSetField(tcp_src=tcp_dst),
+						#parser.OFPActionSetField(tcp_dst=tcp_src),
+						parser.OFPActionOutput(WAN_PORT)
+						]
 		
 
 		self.add_flow(datapath, match=match, actions=actions,
@@ -201,13 +232,16 @@ class LoadBalancer(app_manager.RyuApp):
 		pkt = packet.Packet(msg.data)
 
 		pkt_ethernet = pkt.get_protocol(ethernet.ethernet)
-		pkt_arp = pkt.get_protocol(arp.arp)
+		#pkt_arp = pkt.get_protocol(arp.arp)
 		pkt_ip = pkt.get_protocol(ipv4.ipv4)
 		pkt_tcp = pkt.get_protocol(tcp.tcp)
 
-		if in_port == self.wan_port:
-			# Packets from WAN port
-			self._private_to_public(datapath=datapath,
+		if ():
+			return
+
+		if (pkt_ip and pkt_tcp and in_port == WAN_PORT):
+			# Packets from WAN port (& fluxo normal)
+			self._public_to_private(datapath=datapath,
 									buffer_id=msg.buffer_id,
 									data=msg.data,
 									pkt_ethernet=pkt_ethernet,
@@ -215,6 +249,49 @@ class LoadBalancer(app_manager.RyuApp):
 									pkt_tcp=pkt_tcp)
 		else:
 			# Packets from LAN
-			pass #TODO: Might be a problem
-			# Acho que sim, porque as comunicações normalmente começam pelos pc's.
-			# Pode-se é verificar se o ip de destino é a public port do router? Se sim, fazer public_to_private, que se calhar vai substituir a private_to_public
+			self._packet_in_handler_default(ev)
+
+
+	def _packet_in_handler_default(self, ev):
+		msg = ev.msg
+		datapath = msg.datapath
+		ofproto = datapath.ofproto
+		parser = datapath.ofproto_parser
+
+		in_port = msg.match['in_port']
+
+		pkt = packet.Packet(msg.data)
+		eth = pkt.get_protocol(ethernet.ethernet)
+
+		dst = eth.dst
+		src = eth.src
+
+		# learn a mac address to avoid FLOOD next time.
+		self.mac_to_port[src] = in_port
+
+		if dst in self.mac_to_port:
+			out_port = self.mac_to_port[dst]
+		else:
+			out_port = ofproto.OFPP_FLOOD
+			
+		#self.logger.info("packet_in | src=%s dst=%s in_port=%s out_port=%s", src, dst, in_port, out_port)
+
+		actions = [parser.OFPActionOutput(out_port)]
+
+		# install a flow to avoid packet_in next time
+		if out_port != ofproto.OFPP_FLOOD:
+			match = parser.OFPMatch(in_port=in_port, eth_dst=dst, eth_src=src, eth_type=ether_types.ETH_TYPE_ARP)
+			if msg.buffer_id != ofproto.OFP_NO_BUFFER:
+				self.add_flow(datapath, 1, match, actions, msg.buffer_id)
+				return
+			else:
+				self.add_flow(datapath, 1, match, actions)
+		data = None
+		if msg.buffer_id == ofproto.OFP_NO_BUFFER:
+			data = msg.data
+
+		out = parser.OFPPacketOut(datapath=datapath, buffer_id=msg.buffer_id,
+								  in_port=in_port, actions=actions, data=data)
+	
+		datapath.send_msg(out)
+
