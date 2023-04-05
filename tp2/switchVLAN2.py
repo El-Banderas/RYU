@@ -121,20 +121,6 @@ class VlanSwitch13(app_manager.RyuApp):
 
         return actions
 
-    def getActionsNormalUntagged(self, dpid, in_port, parser):
-        actions = []
-
-        for port in port_vlan[dpid]:
-            if port_vlan[dpid][port][0] == " " and port != in_port:
-                actions.append(parser.OFPActionOutput(port))
-
-        if dpid in trunk:
-
-            for port in trunk[dpid]:
-                if port != in_port:
-                    actions.append(parser.OFPActionOutput(port))
-
-        return actions
 
 # ---------------------------------------------------------------#
 
