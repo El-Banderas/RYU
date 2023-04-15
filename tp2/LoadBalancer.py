@@ -166,7 +166,7 @@ class LoadBalancer(app_manager.RyuApp):
 			tcp_dst: {tcp_dst} -> {nat_tcp_dst}
 			"""
 		)
-		print("Banderas")
+		print("TCP flags (SYN, ACK, FIN)")
 		print(pkt_tcp.has_flags(tcp.TCP_SYN))
 		print(pkt_tcp.has_flags(tcp.TCP_ACK))
 		print(pkt_tcp.has_flags(tcp.TCP_FIN))
