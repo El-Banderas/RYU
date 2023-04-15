@@ -166,7 +166,10 @@ class LoadBalancer(app_manager.RyuApp):
 			tcp_dst: {tcp_dst} -> {nat_tcp_dst}
 			"""
 		)
-
+		print("Banderas")
+		print(pkt_tcp.has_flags(tcp.TCP_SYN))
+		print(pkt_tcp.has_flags(tcp.TCP_ACK))
+		print(pkt_tcp.has_flags(tcp.TCP_FIN))
 		match = parser.OFPMatch(
 								in_port=WAN_PORT,
 								eth_type=ether.ETH_TYPE_IP,
@@ -174,7 +177,10 @@ class LoadBalancer(app_manager.RyuApp):
 								ipv4_src=ipv4_src,
 								ipv4_dst=ipv4_dst,
 								tcp_src=tcp_src,
-								tcp_dst=tcp_dst
+								tcp_dst=tcp_dst,
+								# Vi as flags daqui:
+								# https://github.com/faucetsdn/ryu/blob/e3ebed794332ca23a0f67580fd3230612d9d7b07/ryu/lib/packet/tcp.py#L42
+								tcp_flags=0x002|0x010,
 								)
 
 		actions = [
@@ -194,7 +200,8 @@ class LoadBalancer(app_manager.RyuApp):
 									ipv4_src=nat_ipv4_dst,
 									ipv4_dst=nat_ipv4_src,
 									tcp_src=nat_tcp_dst,
-									tcp_dst=nat_tcp_src
+									tcp_dst=nat_tcp_src,
+									tcp_flags=0x002|0x010,
 									)
 
 		actions_back = [
