@@ -180,7 +180,7 @@ class LoadBalancer(app_manager.RyuApp):
 								tcp_dst=tcp_dst,
 								# Vi as flags daqui:
 								# https://github.com/faucetsdn/ryu/blob/e3ebed794332ca23a0f67580fd3230612d9d7b07/ryu/lib/packet/tcp.py#L42
-								tcp_flags=0x002|0x010,
+								#tcp_flags=tcp.TCP_ACK|tcp.TCP_SYN,
 								)
 
 		actions = [
@@ -201,7 +201,7 @@ class LoadBalancer(app_manager.RyuApp):
 									ipv4_dst=nat_ipv4_src,
 									tcp_src=nat_tcp_dst,
 									tcp_dst=nat_tcp_src,
-									tcp_flags=0x002|0x010,
+									#tcp_flags=tcp.TCP_ACK|tcp.TCP_SYN,
 									)
 
 		actions_back = [
