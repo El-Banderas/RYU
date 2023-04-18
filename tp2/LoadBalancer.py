@@ -6,7 +6,7 @@ from ryu.lib.packet import packet, ethernet, ether_types, ipv4, tcp, arp
 from ryu.ofproto import ofproto_v1_3, ether, inet
 
 
-IDLE_TIME = 10
+IDLE_TIME = 4
 
 WAN_PORT = 1
 NAT_PUBLIC_IP = "10.0.10.100"
