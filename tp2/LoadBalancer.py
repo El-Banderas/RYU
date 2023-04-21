@@ -35,11 +35,14 @@ class LoadBalancer(app_manager.RyuApp):
 		self.mac_to_port = {}
 
 		self.current_port = -1 # TODO: Port pool
+		'''
 		self.last_match = None
 		self.last_match_with_Ack = None
 		self.last_match_back = None
 		self.last_action = None
 		self.last_action_back = None
+		'''
+		self.dic_match_stuff = {}
 
 		self.current_server_idx = -1
 
@@ -246,11 +249,14 @@ class LoadBalancer(app_manager.RyuApp):
 						#parser.OFPActionSetField(tcp_dst=tcp_src),
 						parser.OFPActionOutput(WAN_PORT)
 						]
+		'''
 		self.last_match = match
 		self.last_match_back = match_back
 		self.last_match_with_Ack = last_match_with_Ack
 		self.last_action = actions
 		self.last_action_back = actions_back
+		'''
+		self.dic_match_stuff[(ipv4_src, tcp_src)] = (match, match_back, last_match_with_Ack, actions, actions_back)
 		actions_manda_controlador = [parser.OFPActionOutput(ofproto.OFPP_CONTROLLER,
 										  ofproto.OFPCML_NO_BUFFER)]
 
@@ -272,16 +278,25 @@ class LoadBalancer(app_manager.RyuApp):
 		parser = datapath.ofproto_parser
 		ofproto = datapath.ofproto
 		
+		ipv4_src = pkt_ip.src
+		tcp_src = pkt_tcp.src_port
+		(last_match, last_match_back, last_match_with_Ack, last_action, last_action_back) = self.dic_match_stuff[(ipv4_src, tcp_src)] 
 		print("Recebeu um fin")
+		print(last_match)
+		print(last_match_back)
+		print(last_match_with_Ack)
+		print(last_action)
+		print(last_action_back)
 		lista_flags = [tcp.TCP_SYN,tcp.TCP_RST,tcp.TCP_PSH,tcp.TCP_ACK,tcp.TCP_URG,tcp.TCP_ECE,tcp.TCP_CWR,tcp.TCP_NS, tcp.TCP_FIN ]
+		del self.dic_match_stuff[(ipv4_src, tcp_src)]
 		lista_flags_nomes = ["TCP_SYN","tcp.TCP_RST","tcp.TCP_PSH","tcp.TCP_ACK","tcp.TCP_URG","tcp.TCP_ECE","tcp.TCP_CWR","tcp.TCP_NS", "tcp.TCP_FIN" ]
 		for (idx, flag) in enumerate(lista_flags):
 			if 	pkt_tcp.has_flags(flag):
 				print("Flag true " , flag )
 				print("Flag true " , lista_flags_nomes[idx] )
 		# Apagar os flows 
-		mod1 = parser.OFPFlowMod(datapath=datapath, match=self.last_match, cookie=0,out_port=ofproto.OFPP_ANY, out_group=ofproto.OFPG_ANY,flags=ofproto.OFPFF_SEND_FLOW_REM,command=ofproto.OFPFC_DELETE)
-		mod2 = parser.OFPFlowMod(datapath=datapath, match=self.last_match_back, cookie=0,out_port=ofproto.OFPP_ANY, out_group=ofproto.OFPG_ANY,flags=ofproto.OFPFF_SEND_FLOW_REM,command=ofproto.OFPFC_DELETE)
+		mod1 = parser.OFPFlowMod(datapath=datapath, match=last_match, cookie=0,out_port=ofproto.OFPP_ANY, out_group=ofproto.OFPG_ANY,flags=ofproto.OFPFF_SEND_FLOW_REM,command=ofproto.OFPFC_DELETE)
+		mod2 = parser.OFPFlowMod(datapath=datapath, match=last_match_back, cookie=0,out_port=ofproto.OFPP_ANY, out_group=ofproto.OFPG_ANY,flags=ofproto.OFPFF_SEND_FLOW_REM,command=ofproto.OFPFC_DELETE)
 		datapath.send_msg(mod1)	
 		datapath.send_msg(mod2)	
 		# Enviar a mensagem que recebeu para o servidor
@@ -289,11 +304,11 @@ class LoadBalancer(app_manager.RyuApp):
 		if buffer_id == ofproto.OFP_NO_BUFFER:
 			d = data
 		out = parser.OFPPacketOut(datapath=datapath, buffer_id=buffer_id,
-								  in_port=WAN_PORT, actions=self.last_action, data=d)
+								  in_port=WAN_PORT, actions=last_action, data=d)
 
 		datapath.send_msg(out)
 		# Depois saber reencaminhar o ACK
-		self.add_flow(datapath, match=self.last_match_with_Ack, idle_timeout=2, actions=self.last_action_back , priority=20)
+		self.add_flow(datapath, match=last_match_with_Ack, idle_timeout=2, actions=last_action_back , priority=20)
 
 
 	@set_ev_cls(ofp_event.EventOFPPacketIn, MAIN_DISPATCHER)
@@ -312,13 +327,17 @@ class LoadBalancer(app_manager.RyuApp):
 
 
 		if (pkt_ip and pkt_tcp and in_port == WAN_PORT):
-			if pkt_tcp.has_flags(tcp.TCP_FIN):
+			ipv4_src = pkt_ip.src
+			tcp_src = pkt_tcp.src_port
+			if pkt_tcp.has_flags(tcp.TCP_FIN) and (ipv4_src, tcp_src) in self.dic_match_stuff:
 				self.end_connection(datapath=datapath,
 										buffer_id=msg.buffer_id,
 										data=msg.data,
 										pkt_ethernet=pkt_ethernet,
 									pkt_ip=pkt_ip,
 									pkt_tcp=pkt_tcp)
+			elif pkt_tcp.has_flags(tcp.TCP_FIN):
+				print("Recebe um FIN mas não está no dicionário. Estranho...")
 			else: 
 				# Packets from WAN port (& fluxo normal)
 				self._public_to_private(datapath=datapath,
