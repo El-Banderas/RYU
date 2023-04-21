@@ -184,16 +184,12 @@ class LoadBalancer(app_manager.RyuApp):
 		print(pkt_tcp.has_flags(tcp.TCP_FIN))
 		'''
 		last_match_with_Ack = parser.OFPMatch(
-								in_port=WAN_PORT,
-								eth_type=ether.ETH_TYPE_IP,
-								ip_proto=inet.IPPROTO_TCP,
-								ipv4_src=ipv4_src,
-								ipv4_dst=ipv4_dst,
-								#tcp_src=tcp_src,
-								#tcp_dst=tcp_dst,
-								# Vi as flags daqui:
-								# https://github.com/faucetsdn/ryu/blob/e3ebed794332ca23a0f67580fd3230612d9d7b07/ryu/lib/packet/tcp.py#L42
-								#tcp_flags=tcp.TCP_ACK|tcp.TCP_PSH,
+								
+									in_port=out_port,
+									eth_type=ether.ETH_TYPE_IP,
+									ip_proto=inet.IPPROTO_TCP,
+									ipv4_src=nat_ipv4_dst,
+									ipv4_dst=nat_ipv4_src,
 								tcp_flags=tcp.TCP_ACK,
 								)
 		match = parser.OFPMatch(
@@ -252,8 +248,9 @@ class LoadBalancer(app_manager.RyuApp):
 						]
 		self.last_match = match
 		self.last_match_back = match_back
+		self.last_match_with_Ack = last_match_with_Ack
 		self.last_action = actions
-		self.last_action_back = actions
+		self.last_action_back = actions_back
 		actions_manda_controlador = [parser.OFPActionOutput(ofproto.OFPP_CONTROLLER,
 										  ofproto.OFPCML_NO_BUFFER)]
 
@@ -275,15 +272,6 @@ class LoadBalancer(app_manager.RyuApp):
 		parser = datapath.ofproto_parser
 		ofproto = datapath.ofproto
 		
-		eth_src = pkt_ethernet.src
-		eth_dst = pkt_ethernet.dst # == NAT_PUBLIC_MAC
-		ipv4_src = pkt_ip.src
-		ipv4_dst = pkt_ip.dst # == NAT_PUBLIC_IP
-		tcp_src = pkt_tcp.src_port
-		tcp_dst = pkt_tcp.dst_port
-
-		
-
 		print("Recebeu um fin")
 		lista_flags = [tcp.TCP_SYN,tcp.TCP_RST,tcp.TCP_PSH,tcp.TCP_ACK,tcp.TCP_URG,tcp.TCP_ECE,tcp.TCP_CWR,tcp.TCP_NS, tcp.TCP_FIN ]
 		lista_flags_nomes = ["TCP_SYN","tcp.TCP_RST","tcp.TCP_PSH","tcp.TCP_ACK","tcp.TCP_URG","tcp.TCP_ECE","tcp.TCP_CWR","tcp.TCP_NS", "tcp.TCP_FIN" ]
@@ -291,12 +279,21 @@ class LoadBalancer(app_manager.RyuApp):
 			if 	pkt_tcp.has_flags(flag):
 				print("Flag true " , flag )
 				print("Flag true " , lista_flags_nomes[idx] )
-
-		mod1 = parser.OFPFlowMod(datapath=datapath, match=self.last_match, cookie=0,command=ofproto.OFPFC_DELETE)
-		mod2 = parser.OFPFlowMod(datapath=datapath, match=self.last_match_back, cookie=0,command=ofproto.OFPFC_DELETE)
+		# Apagar os flows 
+		mod1 = parser.OFPFlowMod(datapath=datapath, match=self.last_match, cookie=0,out_port=ofproto.OFPP_ANY, out_group=ofproto.OFPG_ANY,flags=ofproto.OFPFF_SEND_FLOW_REM,command=ofproto.OFPFC_DELETE)
+		mod2 = parser.OFPFlowMod(datapath=datapath, match=self.last_match_back, cookie=0,out_port=ofproto.OFPP_ANY, out_group=ofproto.OFPG_ANY,flags=ofproto.OFPFF_SEND_FLOW_REM,command=ofproto.OFPFC_DELETE)
 		datapath.send_msg(mod1)	
 		datapath.send_msg(mod2)	
-		self.add_flow(datapath, match=self.last_match_with_Ack, idle_timeout=2, actions=self.last_action , priority=15)
+		# Enviar a mensagem que recebeu para o servidor
+		d = None
+		if buffer_id == ofproto.OFP_NO_BUFFER:
+			d = data
+		out = parser.OFPPacketOut(datapath=datapath, buffer_id=buffer_id,
+								  in_port=WAN_PORT, actions=self.last_action, data=d)
+
+		datapath.send_msg(out)
+		# Depois saber reencaminhar o ACK
+		self.add_flow(datapath, match=self.last_match_with_Ack, idle_timeout=2, actions=self.last_action_back , priority=20)
 
 
 	@set_ev_cls(ofp_event.EventOFPPacketIn, MAIN_DISPATCHER)
@@ -315,7 +312,6 @@ class LoadBalancer(app_manager.RyuApp):
 
 
 		if (pkt_ip and pkt_tcp and in_port == WAN_PORT):
-			'''
 			if pkt_tcp.has_flags(tcp.TCP_FIN):
 				self.end_connection(datapath=datapath,
 										buffer_id=msg.buffer_id,
@@ -324,9 +320,8 @@ class LoadBalancer(app_manager.RyuApp):
 									pkt_ip=pkt_ip,
 									pkt_tcp=pkt_tcp)
 			else: 
-			'''
 				# Packets from WAN port (& fluxo normal)
-			self._public_to_private(datapath=datapath,
+				self._public_to_private(datapath=datapath,
 										buffer_id=msg.buffer_id,
 										data=msg.data,
 										pkt_ethernet=pkt_ethernet,
@@ -381,30 +376,3 @@ class LoadBalancer(app_manager.RyuApp):
 		datapath.send_msg(out)
 
 
-# Depois apagar
-@set_ev_cls(ofp_event.EventOFPFlowRemoved, MAIN_DISPATCHER)
-def flow_removed_handler(self, ev):
-    msg = ev.msg
-    dp = msg.datapath
-    ofp = dp.ofproto
-
-    if msg.reason == ofp.OFPRR_IDLE_TIMEOUT:
-        reason = 'IDLE TIMEOUT'
-    elif msg.reason == ofp.OFPRR_HARD_TIMEOUT:
-        reason = 'HARD TIMEOUT'
-    elif msg.reason == ofp.OFPRR_DELETE:
-        reason = 'DELETE'
-    elif msg.reason == ofp.OFPRR_GROUP_DELETE:
-        reason = 'GROUP DELETE'
-    else:
-        reason = 'unknown'
-
-    self.logger.debug('OFPFlowRemoved received: '
-                      'cookie=%d priority=%d reason=%s table_id=%d '
-                      'duration_sec=%d duration_nsec=%d '
-                      'idle_timeout=%d hard_timeout=%d '
-                      'packet_count=%d byte_count=%d match.fields=%s',
-                      msg.cookie, msg.priority, reason, msg.table_id,
-                      msg.duration_sec, msg.duration_nsec,
-                      msg.idle_timeout, msg.hard_timeout,
-                      msg.packet_count, msg.byte_count, msg.match)
