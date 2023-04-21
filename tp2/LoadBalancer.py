@@ -6,7 +6,7 @@ from ryu.lib.packet import packet, ethernet, ether_types, ipv4, tcp, arp
 from ryu.ofproto import ofproto_v1_3, ether, inet
 
 
-IDLE_TIME = 4
+IDLE_TIME = 10
 
 WAN_PORT = 1
 NAT_PUBLIC_IP = "10.0.10.100"
@@ -26,7 +26,6 @@ IP_TO_PORT_TABLE = {
 	"10.0.10.103": 2
 }
 
-
 class LoadBalancer(app_manager.RyuApp):
 	OFP_VERSIONS = [ofproto_v1_3.OFP_VERSION]
 
@@ -36,6 +35,12 @@ class LoadBalancer(app_manager.RyuApp):
 		self.mac_to_port = {}
 
 		self.current_port = -1 # TODO: Port pool
+		self.last_match = None
+		self.last_match_with_Ack = None
+		self.last_match_back = None
+		self.last_action = None
+		self.last_action_back = None
+
 		self.current_server_idx = -1
 
 
@@ -166,22 +171,55 @@ class LoadBalancer(app_manager.RyuApp):
 			tcp_dst: {tcp_dst} -> {nat_tcp_dst}
 			"""
 		)
+		lista_flags = [tcp.TCP_SYN,tcp.TCP_RST,tcp.TCP_PSH,tcp.TCP_ACK,tcp.TCP_URG,tcp.TCP_ECE,tcp.TCP_CWR,tcp.TCP_NS, tcp.TCP_FIN ]
+		lista_flags_nomes = ["TCP_SYN","tcp.TCP_RST","tcp.TCP_PSH","tcp.TCP_ACK","tcp.TCP_URG","tcp.TCP_ECE","tcp.TCP_CWR","tcp.TCP_NS", "tcp.TCP_FIN" ]
+		for (idx, flag) in enumerate(lista_flags):
+			if 	pkt_tcp.has_flags(flag):
+				print("Flag true " , flag )
+				print("Flag true " , lista_flags_nomes[idx] )
+		'''
 		print("TCP flags (SYN, ACK, FIN)")
 		print(pkt_tcp.has_flags(tcp.TCP_SYN))
 		print(pkt_tcp.has_flags(tcp.TCP_ACK))
 		print(pkt_tcp.has_flags(tcp.TCP_FIN))
+		'''
+		last_match_with_Ack = parser.OFPMatch(
+								in_port=WAN_PORT,
+								eth_type=ether.ETH_TYPE_IP,
+								ip_proto=inet.IPPROTO_TCP,
+								ipv4_src=ipv4_src,
+								ipv4_dst=ipv4_dst,
+								#tcp_src=tcp_src,
+								#tcp_dst=tcp_dst,
+								# Vi as flags daqui:
+								# https://github.com/faucetsdn/ryu/blob/e3ebed794332ca23a0f67580fd3230612d9d7b07/ryu/lib/packet/tcp.py#L42
+								#tcp_flags=tcp.TCP_ACK|tcp.TCP_PSH,
+								tcp_flags=tcp.TCP_ACK,
+								)
 		match = parser.OFPMatch(
 								in_port=WAN_PORT,
 								eth_type=ether.ETH_TYPE_IP,
 								ip_proto=inet.IPPROTO_TCP,
 								ipv4_src=ipv4_src,
 								ipv4_dst=ipv4_dst,
-								tcp_src=tcp_src,
-								tcp_dst=tcp_dst,
+								#tcp_src=tcp_src,
+								#tcp_dst=tcp_dst,
 								# Vi as flags daqui:
 								# https://github.com/faucetsdn/ryu/blob/e3ebed794332ca23a0f67580fd3230612d9d7b07/ryu/lib/packet/tcp.py#L42
-								#tcp_flags=tcp.TCP_ACK|tcp.TCP_SYN,
+								#tcp_flags=tcp.TCP_ACK|tcp.TCP_PSH,
 								)
+		match_fin = parser.OFPMatch(
+								in_port=WAN_PORT,
+								eth_type=ether.ETH_TYPE_IP,
+								ip_proto=inet.IPPROTO_TCP,
+								ipv4_src=ipv4_src,
+								ipv4_dst=ipv4_dst,
+								#tcp_src=tcp_src,
+								#tcp_dst=tcp_dst,
+								tcp_flags=tcp.TCP_ACK|tcp.TCP_FIN,
+								#tcp_flags=tcp.TCP_FIN
+								)
+
 
 		actions = [
 					parser.OFPActionSetField(eth_dst=nat_eth_dst),
@@ -192,15 +230,14 @@ class LoadBalancer(app_manager.RyuApp):
 					#parser.OFPActionSetField(tcp_dst=nat_tcp_dst),
 					parser.OFPActionOutput(out_port)
 					]
-
 		match_back = parser.OFPMatch(	
 									in_port=out_port,
 									eth_type=ether.ETH_TYPE_IP,
 									ip_proto=inet.IPPROTO_TCP,
 									ipv4_src=nat_ipv4_dst,
 									ipv4_dst=nat_ipv4_src,
-									tcp_src=nat_tcp_dst,
-									tcp_dst=nat_tcp_src,
+									#tcp_src=nat_tcp_dst,
+									#tcp_dst=nat_tcp_src,
 									#tcp_flags=tcp.TCP_ACK|tcp.TCP_SYN,
 									)
 
@@ -213,12 +250,17 @@ class LoadBalancer(app_manager.RyuApp):
 						#parser.OFPActionSetField(tcp_dst=tcp_src),
 						parser.OFPActionOutput(WAN_PORT)
 						]
-		
+		self.last_match = match
+		self.last_match_back = match_back
+		self.last_action = actions
+		self.last_action_back = actions
+		actions_manda_controlador = [parser.OFPActionOutput(ofproto.OFPP_CONTROLLER,
+										  ofproto.OFPCML_NO_BUFFER)]
 
-		self.add_flow(datapath, match=match, actions=actions,
-					  idle_timeout=IDLE_TIME, priority=10)
-		self.add_flow(datapath, match=match_back, actions=actions_back,
-					  idle_timeout=IDLE_TIME, priority=10)
+	    # É do cliente para o servidor, logo é o normal, NÃO O BACK
+		self.add_flow(datapath, match=match_fin, actions=actions_manda_controlador , priority=15)
+		self.add_flow(datapath, match=match, actions=actions, priority=10)
+		self.add_flow(datapath, match=match_back, actions=actions_back, priority=10)
 
 		d = None
 		if buffer_id == ofproto.OFP_NO_BUFFER:
@@ -227,6 +269,34 @@ class LoadBalancer(app_manager.RyuApp):
 		out = parser.OFPPacketOut(datapath=datapath, buffer_id=buffer_id,
 								  in_port=WAN_PORT, actions=actions, data=d)
 		datapath.send_msg(out)
+
+	def end_connection(self, datapath, buffer_id, data,
+						   pkt_ip, pkt_ethernet, pkt_tcp):
+		parser = datapath.ofproto_parser
+		ofproto = datapath.ofproto
+		
+		eth_src = pkt_ethernet.src
+		eth_dst = pkt_ethernet.dst # == NAT_PUBLIC_MAC
+		ipv4_src = pkt_ip.src
+		ipv4_dst = pkt_ip.dst # == NAT_PUBLIC_IP
+		tcp_src = pkt_tcp.src_port
+		tcp_dst = pkt_tcp.dst_port
+
+		
+
+		print("Recebeu um fin")
+		lista_flags = [tcp.TCP_SYN,tcp.TCP_RST,tcp.TCP_PSH,tcp.TCP_ACK,tcp.TCP_URG,tcp.TCP_ECE,tcp.TCP_CWR,tcp.TCP_NS, tcp.TCP_FIN ]
+		lista_flags_nomes = ["TCP_SYN","tcp.TCP_RST","tcp.TCP_PSH","tcp.TCP_ACK","tcp.TCP_URG","tcp.TCP_ECE","tcp.TCP_CWR","tcp.TCP_NS", "tcp.TCP_FIN" ]
+		for (idx, flag) in enumerate(lista_flags):
+			if 	pkt_tcp.has_flags(flag):
+				print("Flag true " , flag )
+				print("Flag true " , lista_flags_nomes[idx] )
+
+		mod1 = parser.OFPFlowMod(datapath=datapath, match=self.last_match, cookie=0,command=ofproto.OFPFC_DELETE)
+		mod2 = parser.OFPFlowMod(datapath=datapath, match=self.last_match_back, cookie=0,command=ofproto.OFPFC_DELETE)
+		datapath.send_msg(mod1)	
+		datapath.send_msg(mod2)	
+		self.add_flow(datapath, match=self.last_match_with_Ack, idle_timeout=2, actions=self.last_action , priority=15)
 
 
 	@set_ev_cls(ofp_event.EventOFPPacketIn, MAIN_DISPATCHER)
@@ -243,15 +313,23 @@ class LoadBalancer(app_manager.RyuApp):
 		pkt_ip = pkt.get_protocol(ipv4.ipv4)
 		pkt_tcp = pkt.get_protocol(tcp.tcp)
 
-		if ():
-			return
 
 		if (pkt_ip and pkt_tcp and in_port == WAN_PORT):
-			# Packets from WAN port (& fluxo normal)
+			'''
+			if pkt_tcp.has_flags(tcp.TCP_FIN):
+				self.end_connection(datapath=datapath,
+										buffer_id=msg.buffer_id,
+										data=msg.data,
+										pkt_ethernet=pkt_ethernet,
+									pkt_ip=pkt_ip,
+									pkt_tcp=pkt_tcp)
+			else: 
+			'''
+				# Packets from WAN port (& fluxo normal)
 			self._public_to_private(datapath=datapath,
-									buffer_id=msg.buffer_id,
-									data=msg.data,
-									pkt_ethernet=pkt_ethernet,
+										buffer_id=msg.buffer_id,
+										data=msg.data,
+										pkt_ethernet=pkt_ethernet,
 									pkt_ip=pkt_ip,
 									pkt_tcp=pkt_tcp)
 		else:
@@ -302,3 +380,31 @@ class LoadBalancer(app_manager.RyuApp):
 	
 		datapath.send_msg(out)
 
+
+# Depois apagar
+@set_ev_cls(ofp_event.EventOFPFlowRemoved, MAIN_DISPATCHER)
+def flow_removed_handler(self, ev):
+    msg = ev.msg
+    dp = msg.datapath
+    ofp = dp.ofproto
+
+    if msg.reason == ofp.OFPRR_IDLE_TIMEOUT:
+        reason = 'IDLE TIMEOUT'
+    elif msg.reason == ofp.OFPRR_HARD_TIMEOUT:
+        reason = 'HARD TIMEOUT'
+    elif msg.reason == ofp.OFPRR_DELETE:
+        reason = 'DELETE'
+    elif msg.reason == ofp.OFPRR_GROUP_DELETE:
+        reason = 'GROUP DELETE'
+    else:
+        reason = 'unknown'
+
+    self.logger.debug('OFPFlowRemoved received: '
+                      'cookie=%d priority=%d reason=%s table_id=%d '
+                      'duration_sec=%d duration_nsec=%d '
+                      'idle_timeout=%d hard_timeout=%d '
+                      'packet_count=%d byte_count=%d match.fields=%s',
+                      msg.cookie, msg.priority, reason, msg.table_id,
+                      msg.duration_sec, msg.duration_nsec,
+                      msg.idle_timeout, msg.hard_timeout,
+                      msg.packet_count, msg.byte_count, msg.match)
