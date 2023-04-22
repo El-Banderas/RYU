@@ -338,7 +338,7 @@ class LoadBalancer(app_manager.RyuApp):
 									pkt_tcp=pkt_tcp)
 			elif pkt_tcp.has_flags(tcp.TCP_FIN):
 				print("Recebe um FIN mas não está no dicionário. Estranho...")
-			else: 
+			elif pkt_tcp.has_flags(tcp.TCP_SYN): 
 				# Packets from WAN port (& fluxo normal)
 				self._public_to_private(datapath=datapath,
 										buffer_id=msg.buffer_id,
