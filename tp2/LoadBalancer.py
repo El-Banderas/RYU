@@ -26,6 +26,15 @@ IP_TO_PORT_TABLE = {
 	"10.0.10.103": 2
 }
 
+def print_flags(pkt_tcp):
+		lista_flags = [tcp.TCP_SYN,tcp.TCP_RST,tcp.TCP_PSH,tcp.TCP_ACK,tcp.TCP_URG,tcp.TCP_ECE,tcp.TCP_CWR,tcp.TCP_NS, tcp.TCP_FIN ]
+		lista_flags_nomes = ["TCP_SYN","tcp.TCP_RST","tcp.TCP_PSH","tcp.TCP_ACK","tcp.TCP_URG","tcp.TCP_ECE","tcp.TCP_CWR","tcp.TCP_NS", "tcp.TCP_FIN" ]
+		for (idx, flag) in enumerate(lista_flags):
+			if 	pkt_tcp.has_flags(flag):
+				print("Flag true " , flag )
+				print("Flag true " , lista_flags_nomes[idx] )
+	
+
 class LoadBalancer(app_manager.RyuApp):
 	OFP_VERSIONS = [ofproto_v1_3.OFP_VERSION]
 
@@ -256,7 +265,7 @@ class LoadBalancer(app_manager.RyuApp):
 		self.last_action = actions
 		self.last_action_back = actions_back
 		'''
-		self.dic_match_stuff[(ipv4_src, tcp_src)] = (match, match_back, last_match_with_Ack, actions, actions_back)
+		self.dic_match_stuff[(ipv4_src, tcp_src)] = (match, match_back, last_match_with_Ack, actions, actions_back, match_fin)
 		actions_manda_controlador = [parser.OFPActionOutput(ofproto.OFPP_CONTROLLER,
 										  ofproto.OFPCML_NO_BUFFER)]
 
@@ -280,7 +289,7 @@ class LoadBalancer(app_manager.RyuApp):
 		
 		ipv4_src = pkt_ip.src
 		tcp_src = pkt_tcp.src_port
-		(last_match, last_match_back, last_match_with_Ack, last_action, last_action_back) = self.dic_match_stuff[(ipv4_src, tcp_src)] 
+		(last_match, last_match_back, last_match_with_Ack, last_action, last_action_back, match_fin) = self.dic_match_stuff[(ipv4_src, tcp_src)] 
 		print("Recebeu um fin")
 		print(last_match)
 		print(last_match_back)
@@ -297,8 +306,10 @@ class LoadBalancer(app_manager.RyuApp):
 		# Apagar os flows 
 		mod1 = parser.OFPFlowMod(datapath=datapath, match=last_match, cookie=0,out_port=ofproto.OFPP_ANY, out_group=ofproto.OFPG_ANY,flags=ofproto.OFPFF_SEND_FLOW_REM,command=ofproto.OFPFC_DELETE)
 		mod2 = parser.OFPFlowMod(datapath=datapath, match=last_match_back, cookie=0,out_port=ofproto.OFPP_ANY, out_group=ofproto.OFPG_ANY,flags=ofproto.OFPFF_SEND_FLOW_REM,command=ofproto.OFPFC_DELETE)
+		mod3 = parser.OFPFlowMod(datapath=datapath, match=match_fin, cookie=0,out_port=ofproto.OFPP_ANY, out_group=ofproto.OFPG_ANY,flags=ofproto.OFPFF_SEND_FLOW_REM,command=ofproto.OFPFC_DELETE)
 		datapath.send_msg(mod1)	
 		datapath.send_msg(mod2)	
+		self.add_flow(datapath, match=last_match_with_Ack, idle_timeout=2, actions=last_action_back , priority=20)
 		# Enviar a mensagem que recebeu para o servidor
 		d = None
 		if buffer_id == ofproto.OFP_NO_BUFFER:
@@ -307,10 +318,10 @@ class LoadBalancer(app_manager.RyuApp):
 								  in_port=WAN_PORT, actions=last_action, data=d)
 
 		datapath.send_msg(out)
+		datapath.send_msg(mod3)	
 		# Depois saber reencaminhar o ACK
-		self.add_flow(datapath, match=last_match_with_Ack, idle_timeout=2, actions=last_action_back , priority=20)
 
-
+	
 	@set_ev_cls(ofp_event.EventOFPPacketIn, MAIN_DISPATCHER)
 	def _packet_in_handler(self, ev):
 		msg = ev.msg
@@ -346,6 +357,9 @@ class LoadBalancer(app_manager.RyuApp):
 										pkt_ethernet=pkt_ethernet,
 									pkt_ip=pkt_ip,
 									pkt_tcp=pkt_tcp)
+			else:
+				print("recebeu um pacote tcp estranho")
+				print_flags(pkt_tcp)
 		else:
 			# Packets from LAN
 			self._packet_in_handler_default(ev)
