@@ -318,7 +318,7 @@ class LoadBalancer(app_manager.RyuApp):
 								  in_port=WAN_PORT, actions=last_action, data=d)
 
 		datapath.send_msg(out)
-		datapath.send_msg(mod3)	
+		#datapath.send_msg(mod3)	
 		# Depois saber reencaminhar o ACK
 
 	
