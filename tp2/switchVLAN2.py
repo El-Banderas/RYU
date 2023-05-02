@@ -33,32 +33,50 @@ class VlanSwitch13(app_manager.RyuApp):
 
     def __init__(self, *args, **kwargs):
         super(VlanSwitch13, self).__init__(*args, **kwargs)
+        # inicializa um dicionário para armazenar as associações entre endereços MAC e portas
         self.mac_to_port = {}
 
     @set_ev_cls(ofp_event.EventOFPSwitchFeatures, CONFIG_DISPATCHER)
     def switch_features_handler(self, ev):
-        datapath = ev.msg.datapath
-        ofproto = datapath.ofproto
-        parser = datapath.ofproto_parser
+        #Quando o controlador se conecta a um switch, o switch envia uma mensagem OFPSwitchFeatures
+        #com informações sobre as suas capacidades. Esta função é chamada quando essa mensagem é recebida.
+        datapath = ev.msg.datapath #path que representa o switch 
+        ofproto = datapath.ofprotov # versão do protocolo OpenFlow que está a ser usada pelo switch 
+        parser = datapath.ofproto_parser # parser para criar mensagens OpenFlow 
 
-        # install table-miss flow entry
-        #
         # We specify NO BUFFER to max_len of the output action due to
         # OVS bug. At this moment, if we specify a lesser number, e.g.,
         # 128, OVS will send Packet-In with invalid buffer_id and
         # truncated packet data. In that case, we cannot output packets
         # correctly.  The bug has been fixed in OVS v2.1.0.
-        match = parser.OFPMatch()
+
+        # install table-miss flow entry
+        match = parser.OFPMatch() #default match para todos os pacotes
+        #ação para fazer o forward dos pacotes sem entradas para o controller
         actions = [parser.OFPActionOutput(ofproto.OFPP_CONTROLLER,
                                           ofproto.OFPCML_NO_BUFFER)]
+        #
         self.add_flow(datapath, 0, match, actions)
 
+    #Esta funçao adiciona uma entrada de fluxo ao switch. Cria e envia uma mensagem OFPFlowMod para o switch, 
+    # instruindo-o a adicionar uma entrada de fluxo com as especificações fornecidas.
+    #Argumentos:
+    #datapath   - objeto datapath que representa o switch
+    #priority   - prioridade da entrada de fluxo
+    #match      - condição de correspondência do fluxo (ex. endereço MAC de origem e destino)
+    #actions    - lista de ações a serem executadas quando o fluxo corresponder (ex. encaminhar para uma porta)
+    #buffer_id  - (opcional) ID do buffer temporário onde o pacote está armazenado; se fornecido,
+    #o switch processa o pacote armazenado no buffer de acordo com a entrada de fluxo adicionada
+        
     def add_flow(self, datapath, priority, match, actions, buffer_id=None):
         ofproto = datapath.ofproto
         parser = datapath.ofproto_parser
 
+        # Cria a instrução com as ações fornecidas
         inst = [parser.OFPInstructionActions(ofproto.OFPIT_APPLY_ACTIONS,
                                              actions)]
+        
+        # Cria a mensagem OFPFlowMod e a envia para o switch      
         if buffer_id:
             mod = parser.OFPFlowMod(datapath=datapath, buffer_id=buffer_id,
                                     priority=priority, match=match,
@@ -68,6 +86,13 @@ class VlanSwitch13(app_manager.RyuApp):
                                     match=match, instructions=inst)
         datapath.send_msg(mod)
 
+    #esta funçao retorna uma lista de portas de acesso e trunk que pertencem a uma VLAN específica.
+    # itera sobre o dicionário de associações de VLANs e adiciona as portas que pertencem
+    #à VLAN especificada às listas de portas de acesso ou trunk.
+    #Argumentos:
+    #dpid      - ID do datapath (switch) no qual as portas estão localizadas
+    #in_port   - número da porta de entrada 
+    #src_vlan  - ID da VLAN para a qual se deseja obter as portas de acesso e tronco
     def vlan_members(self, dpid, in_port, src_vlan):
 
         access_ports = []
@@ -82,6 +107,7 @@ class VlanSwitch13(app_manager.RyuApp):
             # Distinguimos se é access ou trunk por causa das ações que é necessário fazer. 
             if src_vlan in vlans and item != in_port:
                 if item in access[dpid]:
+                    # Adiciona o membro à lista de membros da VLAN
                     access_ports.append(item)
                 else:
                     trunk_ports.append(item)
@@ -89,29 +115,48 @@ class VlanSwitch13(app_manager.RyuApp):
 
 # ---------------------------------------------------------------#
 
+    #esta função cria e retorna uma lista de ações a serem executadas em portas trunk e portas de acesso
+    #Argumentos:
+    #out_port_access: Lista de portas de acesso que fazem parte da mesma VLAN
+    #out_port_trunk: Lista de portas trunk que fazem parte da mesma VLAN
+    #parser: Objeto de parser do datapath do switch para criar ações
     def getActionsArrayTrunk(self, out_port_access, out_port_trunk, parser):
         actions = []
 
         for port in out_port_trunk:
             actions.append(parser.OFPActionOutput(port))
 
+        # Adiciona ação de remover o cabeçalho VLAN
         actions.append(parser.OFPActionPopVlan())
 
+         # Adiciona ação de saída para cada porta de acesso na lista out_port_access
         for port in out_port_access:
             actions.append(parser.OFPActionOutput(port))
 
         return actions
 
+    #cria e retorna uma lista de ações para serem executadas em portas de acesso e portas trunk.
+    #Argumentos:
+    #out_port_access: Lista de portas de acesso que fazem parte da mesma VLAN
+    #out_port_trunk: Lista de portas trunk que fazem parte da mesma VLAN
+    #src_vlan (int): VLAN de origem
+    #parser: Objeto de parser do datapath do switch para criar ações
+    #dpid (int): ID do datapath do switch
+    #in_port (int): Porta de entrada
     def getActionsArrayAccess(self, out_port_access, out_port_trunk, src_vlan, parser, dpid, in_port):
         
         actions = []
 
+        #Adiciona ação de saída para cada porta de acesso na lista out_port_access
         for port in out_port_access:
             actions.append(parser.OFPActionOutput(port))
 
+        #Adiciona ação de inserir cabeçalho VLAN.
         actions.append(parser.OFPActionPushVlan(33024))
+        #Adiciona ação de definir o campo vlan_vid com a VLAN de origem.
         actions.append(parser.OFPActionSetField(vlan_vid=(0x1000 | src_vlan)))
 
+        #Adiciona ação de saída para cada porta tronco na lista out_port_trunk
         for port in out_port_trunk:
             actions.append(parser.OFPActionOutput(port))
 
@@ -120,10 +165,14 @@ class VlanSwitch13(app_manager.RyuApp):
 
 # ---------------------------------------------------------------#
 
+    #esta função manipula eventos de pacotes recebidos pelo switch e gerencia o encaminhamento de pacotes e adição de fluxos
+    #Argumentos:
+    #ev: Evento de entrada do pacote
     @set_ev_cls(ofp_event.EventOFPPacketIn, MAIN_DISPATCHER)
     def _packet_in_handler(self, ev):
         # If you hit this you might want to increase
         # the "miss_send_length" of your switch
+        #se o tamanho da mensagem for menor que o tamanho total, pode ser necessário aumentar o "miss_send_length" do switch
         if ev.msg.msg_len < ev.msg.total_len:
             self.logger.debug("packet truncated: only %s of %s bytes",
                               ev.msg.msg_len, ev.msg.total_len)
@@ -137,9 +186,10 @@ class VlanSwitch13(app_manager.RyuApp):
         dpid = datapath.id
         pkt = packet.Packet(msg.data)
         eth = pkt.get_protocols(ethernet.ethernet)[0]
-        # If packet is tagged,then this will have non-null value
+        #se o pacote possuir uma tag VLAN, vlan_header terá um valor diferente de null
         vlan_header = pkt.get_protocols(vlan.vlan)
-        
+
+        #verificar se o pacote possui uma VLAN
         if eth.ethertype == ether_types.ETH_TYPE_8021Q:  # Verificar se tem VLAN
             vlan_header_present = True
             src_vlan = vlan_header[0].vid
@@ -159,21 +209,21 @@ class VlanSwitch13(app_manager.RyuApp):
             vlan_header_present = False   # Vem de um host
             src_vlan = port_vlan[dpid][in_port][0]
 
+        # Ignorar pacotes LLDP
         if eth.ethertype == ether_types.ETH_TYPE_LLDP:
-            # ignore lldp packet
             return
 
         dst = eth.dst
         src = eth.src
 
-        # Guardar no dicionário porta de entrada
+        # Guardar no dicionário a porta de entrada
         self.mac_to_port.setdefault(dpid, {})
         self.mac_to_port[dpid][src] = in_port
 
         access_ports, trunk_ports = self.vlan_members(dpid, in_port, src_vlan)
         out_port_type = " "
 
-        # Se o switch já sabe para que porta deve enviar, pelo MAC de destino
+        # Se o switch já sabe para que porta deve enviar, com base no MAC de destino
         if dst in self.mac_to_port[dpid]:  
             out_port_unknown = False
             out_port = self.mac_to_port[dpid][dst]
@@ -204,7 +254,7 @@ class VlanSwitch13(app_manager.RyuApp):
                 match = parser.OFPMatch(
                     in_port=in_port, eth_dst=dst, vlan_vid=(0x1000 | src_vlan))
                 actions = [parser.OFPActionOutput(out_port)]
-            # Se vem de um host e vai para fora (meter VLAN Header)
+            # Se vem de um host e vai para fora (adicionar VLAN Header)
             elif not vlan_header_present  and out_port_type == "TRUNK":
                 match = parser.OFPMatch(in_port=in_port, eth_dst=dst)
                 actions = [parser.OFPActionPushVlan(33024), parser.OFPActionSetField(
@@ -214,8 +264,7 @@ class VlanSwitch13(app_manager.RyuApp):
                 match = parser.OFPMatch(in_port=in_port, eth_dst=dst)
                 actions = [parser.OFPActionOutput(out_port)]
 
-            # verify if we have a valid buffer_id, if avoid yes to send both
-            # flow_mod & packet_out
+            #verificar se temos um buffer_id válido, caso contrário, enviar ambos flow_mod & packet_out
             if msg.buffer_id != ofproto.OFP_NO_BUFFER:
                 self.add_flow(datapath, 1, match, actions, msg.buffer_id)
                 return
@@ -228,7 +277,7 @@ class VlanSwitch13(app_manager.RyuApp):
                     in_port=in_port, eth_dst=dst, vlan_vid=(0x1000 | src_vlan))
                 actions = self.getActionsArrayTrunk(
                     out_port_access, out_port_trunk, parser)
-            # IF UNTAGGED  BUT GENERATED FROM VLAN ASSOCIATED PORT
+            #se não possui VLAN header, mas foi gerado a partir de uma porta associada à VLAN
             # Vem de um host, sabemos qual a vlan de origem
             elif not vlan_header_present and src_vlan != "NULL":
                 
