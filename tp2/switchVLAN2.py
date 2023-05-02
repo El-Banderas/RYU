@@ -110,6 +110,11 @@ class VlanSwitch13(app_manager.RyuApp):
             actions.append(parser.OFPActionOutput(port))
 
         actions.append(parser.OFPActionPushVlan(33024))
+        ##
+
+           #     actions = [parser.OFPActionPushVlan(33024), parser.OFPActionSetField(
+           #         vlan_vid=(0x1000 | src_vlan)), parser.OFPActionOutput(out_port)]
+        ##
         actions.append(parser.OFPActionSetField(vlan_vid=(0x1000 | src_vlan)))
 
         for port in out_port_trunk:
@@ -230,22 +235,11 @@ class VlanSwitch13(app_manager.RyuApp):
                     out_port_access, out_port_trunk, parser)
             # IF UNTAGGED  BUT GENERATED FROM VLAN ASSOCIATED PORT
             # Vem de um host, sabemos qual a vlan de origem
-            elif not vlan_header_present and src_vlan != "NULL":
+            elif not vlan_header_present and src_vlan != None:
                 
                 match = parser.OFPMatch(in_port=in_port, eth_dst=dst)
                 actions = self.getActionsArrayAccess(
                     out_port_access, out_port_trunk, src_vlan, parser, dpid, in_port)
-            elif in_port_type == "NORMAL UNTAGGED":
-                print("Acho que não devia aparecer")
-                match = parser.OFPMatch(in_port=in_port, eth_dst=dst)
-                actions = self.getActionsNormalUntagged(dpid, in_port, parser)
-            else:
-                print("SWITCH normal")
-                # FOR NORMAL NON-VLAN L2 SWITCH
-                actions = [parser.OFPActionOutput(ofproto.OFPP_FLOOD)]
-                match = parser.OFPMatch(in_port=in_port, eth_dst=dst)
-                print("Não devia aparecer isto!!!")
-
             if msg.buffer_id != ofproto.OFP_NO_BUFFER:
                 self.add_flow(datapath, 1, match, actions, msg.buffer_id)
                 return
