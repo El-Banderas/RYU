@@ -153,15 +153,9 @@ class VlanSwitch13(app_manager.RyuApp):
 
         #Adiciona ação de inserir cabeçalho VLAN.
         actions.append(parser.OFPActionPushVlan(33024))
-<<<<<<< HEAD
         #Adiciona ação de definir o campo vlan_vid com a VLAN de origem.
-=======
-        ##
-
-           #     actions = [parser.OFPActionPushVlan(33024), parser.OFPActionSetField(
-           #         vlan_vid=(0x1000 | src_vlan)), parser.OFPActionOutput(out_port)]
-        ##
->>>>>>> a7593ab468485044649e869d2550cf949f4d4e84
+        	# actions = [parser.OFPActionPushVlan(33024), parser.OFPActionSetField(
+        	# 		vlan_vid=(0x1000 | src_vlan)), parser.OFPActionOutput(out_port)]
         actions.append(parser.OFPActionSetField(vlan_vid=(0x1000 | src_vlan)))
 
         #Adiciona ação de saída para cada porta tronco na lista out_port_trunk
