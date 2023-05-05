@@ -5,9 +5,9 @@ from mininet.cli import CLI
 from mininet.log import setLogLevel, info
 
 """
-ryu-manager ~/switchVLAN.py --ofp-tcp-listen-port 6633
-ryu-manager ~/LoadBalancer.py --ofp-tcp-listen-port 6634
-sudo python2.7 -E topo.py
+ryu-manager switchVLAN2.py --ofp-tcp-listen-port 6633
+ryu-manager LoadBalancer.py --ofp-tcp-listen-port 6634
+sudo python -E topo_.py
 """
 
 def TP2():
@@ -81,15 +81,18 @@ def TP2():
 	switch3.start([c1])
 	switch0.start([c2])
 
+	lista_switchs = [switch0, switch1, switch2, switch3]
+	for sw in lista_switchs:
+		sw.cmd("sysctl -w net.ipv6.conf.all.disable_ipv6=1")
+		sw.cmd("sysctl -w net.ipv6.conf.default.disable_ipv6=1")
+		sw.cmd("sysctl -w net.ipv6.conf.lo.disable_ipv6=1")
+
 	server1.cmd("python3 -m server1.py 80 html1.html &")
 	server2.cmd("python3 -m server1.py 80 html2.html &")
 	server3.cmd("python3 -m server1.py 80 html3.html &")
-
-
-	info( "*** Testing network\n" )
+	
+	#info( "*** Testing network\n" )
 	#net.pingAll()
-
-	#host31.cmd("wget -O - h01")
 
 
 	info( "*** Running CLI\n" )
