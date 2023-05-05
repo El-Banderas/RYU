@@ -41,7 +41,7 @@ class VlanSwitch13(app_manager.RyuApp):
         #Quando o controlador se conecta a um switch, o switch envia uma mensagem OFPSwitchFeatures
         #com informações sobre as suas capacidades. Esta função é chamada quando essa mensagem é recebida.
         datapath = ev.msg.datapath #path que representa o switch 
-        ofproto = datapath.ofprotov # versão do protocolo OpenFlow que está a ser usada pelo switch 
+        ofproto = datapath.ofproto
         parser = datapath.ofproto_parser # parser para criar mensagens OpenFlow 
 
         # We specify NO BUFFER to max_len of the output action due to

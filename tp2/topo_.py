@@ -5,7 +5,7 @@ from mininet.cli import CLI
 from mininet.log import setLogLevel, info
 
 """
-ryu-manager switchVLAN2.py --ofp-tcp-listen-port 6633
+ryu-manager switchVLAN.py --ofp-tcp-listen-port 6633
 ryu-manager LoadBalancer.py --ofp-tcp-listen-port 6634
 sudo python -E topo_.py
 """
