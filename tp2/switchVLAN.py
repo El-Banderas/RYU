@@ -1,11 +1,3 @@
-# IMPLEMENTATION OF IEEE 802.1Q VLAN TAGGING AND UNTAGGING
-# DESIRED VLAN CONFIGURATION IS KNOWN PRIORI AND MUST BE ADDED TO THE GLOBAL VARIABLES
-
-# Name: VARUN NAIR
-# STUDENT ID: 4504550
-# DELFT UNIVERSITY OF TECHNOLOGY , Dept. of Electrical Engineering
-
-
 from ryu.base import app_manager
 from ryu.controller import ofp_event
 from ryu.controller.handler import CONFIG_DISPATCHER, MAIN_DISPATCHER
