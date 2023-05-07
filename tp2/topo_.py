@@ -90,6 +90,10 @@ def TP2():
 	server1.cmd("python3 -m server1.py 80 html1.html &")
 	server2.cmd("python3 -m server1.py 80 html2.html &")
 	server3.cmd("python3 -m server1.py 80 html3.html &")
+
+	server1.cmd("iperf -s &")
+	server2.cmd("iperf -s &")
+	server3.cmd("iperf -s &")
 	
 	#info( "*** Testing network\n" )
 	#net.pingAll()
@@ -104,6 +108,10 @@ def TP2():
 	server1.cmd("kill %python")
 	server2.cmd("kill %python")
 	server3.cmd("kill %python")
+
+	server1.cmd("kill %iperf")
+	server2.cmd("kill %iperf")
+	server3.cmd("kill %iperf")
 	
 	net.stop()
 

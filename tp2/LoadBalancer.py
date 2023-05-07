@@ -66,8 +66,13 @@ class LoadBalancer(app_manager.RyuApp):
 		pkt_tcp = pkt.get_protocol(tcp.tcp)
 
 
-		if (in_port == WAN_PORT and pkt_ip and pkt_tcp):
-			# Packets from WAN port (& fluxo normal)
+		if (pkt_arp and pkt_arp.opcode == arp.ARP_REQUEST and pkt_arp.dst_ip == LB_IP):
+			# ARP requests to Load Balancer
+			self._arp_request_handler(datapath, pkt_arp)
+
+
+		elif (in_port == WAN_PORT and pkt_ip and pkt_ip.dst == LB_IP and pkt_tcp):
+			# Packets from WAN port (& fluxo normal) - Apply load balancing
 
 			if pkt_tcp.has_flags(tcp.TCP_SYN): 
 				# New session
@@ -95,13 +100,8 @@ class LoadBalancer(app_manager.RyuApp):
 				print_flags(pkt_tcp)
 
 
-		elif (in_port == WAN_PORT and pkt_arp and pkt_arp.opcode == arp.ARP_REQUEST):
-			# ARP requests
-			self._arp_request_handler(datapath, pkt_arp)
-
-
 		else:
-			# Packets from LAN
+			# default
 			self._packet_in_handler_default(ev)
 
 
