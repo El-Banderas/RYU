@@ -59,7 +59,8 @@ struct metadata {
 struct headers {
 	ethernet_t ethernet;
 	ipv4_t     ipv4;
-	tcp_t      tcp
+	tcp_t      tcp;
+	udp_t      udp;
 }
 
 parser MyParser(packet_in packet,
@@ -81,8 +82,19 @@ parser MyParser(packet_in packet,
 	state parse_ipv4 {
 		packet.extract(hdr.ipv4);
 		transition select(hdr.ipv4.protocol) {
-			default: accept;
+			TYPE_TCP: parse_tcp;
+			TYPE_UDP: parse_udp;
 		}
+	}
+
+	state parse_tcp {
+		packet.extract(hdr.tcp);
+		transition accept;
+	}
+
+	state parse_udp {
+		packet.extract(hdr.udp);
+		transition accept;
 	}
 
 }
