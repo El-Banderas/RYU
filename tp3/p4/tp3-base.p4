@@ -33,38 +33,38 @@ typedef bit<32> ip4Addr_t;
 */
 
 header ethernet_t {
-    macAddr_t dstAddr;
-    macAddr_t srcAddr;
-    bit<16>   etherType;
+	macAddr_t dstAddr;
+	macAddr_t srcAddr;
+	bit<16>   etherType;
 }
 
 header ipv4_t {
-    bit<4>    version;
-    bit<4>    ihl;
-    bit<8>    diffserv;
-    bit<16>   totalLen;
-    bit<16>   identification;
-    bit<3>    flags;
-    bit<13>   fragOffset;
-    bit<8>    ttl;
-    bit<8>    protocol;
-    bit<16>   hdrChecksum;
-    ip4Addr_t srcAddr;
-    ip4Addr_t dstAddr;
+	bit<4>    version;
+	bit<4>    ihl;
+	bit<8>    diffserv;
+	bit<16>   totalLen;
+	bit<16>   identification;
+	bit<3>    flags;
+	bit<13>   fragOffset;
+	bit<8>    ttl;
+	bit<8>    protocol;
+	bit<16>   hdrChecksum;
+	ip4Addr_t srcAddr;
+	ip4Addr_t dstAddr;
 }
 
 header tcp_t {
-    bit<16> srcPort;
-    bit<16> dstPort;
-    bit<32> seqNo;
-    bit<32> ackNo;
-    bit<4>  dataOffset; // how long the TCP header is
-    bit<3>  res;
-    bit<3>  ecn;        // Explicit congestion notification
-    bit<6>  ctrl;       // URG,ACK,PSH,RST,SYN,FIN
-    bit<16> window;
-    bit<16> checksum;
-    bit<16> urgentPtr;
+	bit<16> srcPort;
+	bit<16> dstPort;
+	bit<32> seqNo;
+	bit<32> ackNo;
+	bit<4>  dataOffset; // how long the TCP header is
+	bit<3>  res;
+	bit<3>  ecn;        // Explicit congestion notification
+	bit<6>  ctrl;       // URG,ACK,PSH,RST,SYN,FIN
+	bit<16> window;
+	bit<16> checksum;
+	bit<16> urgentPtr;
 }
 
 
@@ -75,13 +75,13 @@ header tcp_t {
 * variables inside this structure.
 */
 struct metadata {
-    ip4Addr_t   next_hop_ipv4;
+	ip4Addr_t next_hop_ipv4;
 }
 /* all the headers previously defined */
 struct headers {
-    ethernet_t   ethernet;
-    ipv4_t       ipv4;
-    tcp_t        tcp;
+	ethernet_t ethernet;
+	ipv4_t     ipv4;
+	tcp_t      tcp;
 }
 
 /*************************************************************************
@@ -89,28 +89,28 @@ struct headers {
 *************************************************************************/
 
 parser MyParser(packet_in packet,
-                out headers hdr,
-                inout metadata meta,
-                inout standard_metadata_t standard_metadata) {
-    /**
-     * a parser always begins in the start state
-     * a state can invoke other state with two methods
-     * transition <next-state>
-     * transition select(<expression>) -> works like a switch case
-     */
-    state start {
-        transition parse_ethernet;
-    }
+				out headers hdr,
+				inout metadata meta,
+				inout standard_metadata_t standard_metadata) {
+	/**
+	 * a parser always begins in the start state
+	 * a state can invoke other state with two methods
+	 * transition <next-state>
+	 * transition select(<expression>) -> works like a switch case
+	 */
+	state start {
+		transition parse_ethernet;
+	}
 
-    /*
-    state parse_ethernet {
-        packet.extract(hdr.ethernet);
-        transition select(hdr.ethernet.etherType) {
-            TYPE_IPV4:  <the name of the ipv4 parser>
-            default: accept;
-        }
-    }
-    */
+	/*
+	state parse_ethernet {
+		packet.extract(hdr.ethernet);
+		transition select(hdr.ethernet.etherType) {
+			TYPE_IPV4:  <the name of the ipv4 parser>
+			default: accept;
+		}
+	}
+	*/
 
 }
 
@@ -119,7 +119,7 @@ parser MyParser(packet_in packet,
 *************************************************************************/
 
 control MyVerifyChecksum(inout headers hdr, inout metadata meta) {   
-    apply { /* do nothing */  }
+	apply { /* do nothing */  }
 }
 
 
@@ -128,25 +128,25 @@ control MyVerifyChecksum(inout headers hdr, inout metadata meta) {
 *************************************************************************/
 
 control MyIngress(inout headers hdr,
-                  inout metadata meta,
-                  inout standard_metadata_t standard_metadata) {
-    action drop() {
-        mark_to_drop(standard_metadata);
-    }
+				  inout metadata meta,
+				  inout standard_metadata_t standard_metadata) {
+	action drop() {
+		mark_to_drop(standard_metadata);
+	}
 
-    /**
-    * this is your main pipeline
-    * where we define the actions and tables
-    */
+	/**
+	* this is your main pipeline
+	* where we define the actions and tables
+	*/
 
-    
-    
-    apply {
-        /**
-        * The conditions and order in which the software 
-        * switch must apply the tables. 
-        */
-    }
+	
+	
+	apply {
+		/**
+		* The conditions and order in which the software 
+		* switch must apply the tables. 
+		*/
+	}
 }
 
 /*************************************************************************
@@ -154,9 +154,9 @@ control MyIngress(inout headers hdr,
 *************************************************************************/
 
 control MyEgress(inout headers hdr,
-                 inout metadata meta,
-                 inout standard_metadata_t standard_metadata) {
-    apply { /* do nothing */ }
+				 inout metadata meta,
+				 inout standard_metadata_t standard_metadata) {
+	apply { /* do nothing */ }
 }
 
 /*************************************************************************
@@ -164,24 +164,24 @@ control MyEgress(inout headers hdr,
 *************************************************************************/
 
 control MyComputeChecksum(inout headers  hdr, inout metadata meta) {
-    /* this recalculates the checksum */
-    apply {
+	/* this recalculates the checksum */
+	apply {
 	update_checksum(
-	    hdr.ipv4.isValid(),
-            { hdr.ipv4.version,
-	          hdr.ipv4.ihl,
-              hdr.ipv4.diffserv,
-              hdr.ipv4.totalLen,
-              hdr.ipv4.identification,
-              hdr.ipv4.flags,
-              hdr.ipv4.fragOffset,
-              hdr.ipv4.ttl,
-              hdr.ipv4.protocol,
-              hdr.ipv4.srcAddr,
-              hdr.ipv4.dstAddr },
-            hdr.ipv4.hdrChecksum,
-            HashAlgorithm.csum16);
-    }
+		hdr.ipv4.isValid(),
+			{ hdr.ipv4.version,
+			  hdr.ipv4.ihl,
+			  hdr.ipv4.diffserv,
+			  hdr.ipv4.totalLen,
+			  hdr.ipv4.identification,
+			  hdr.ipv4.flags,
+			  hdr.ipv4.fragOffset,
+			  hdr.ipv4.ttl,
+			  hdr.ipv4.protocol,
+			  hdr.ipv4.srcAddr,
+			  hdr.ipv4.dstAddr },
+			hdr.ipv4.hdrChecksum,
+			HashAlgorithm.csum16);
+	}
 }
 
 /*************************************************************************
@@ -189,12 +189,12 @@ control MyComputeChecksum(inout headers  hdr, inout metadata meta) {
 *************************************************************************/
 
 control MyDeparser(packet_out packet, in headers hdr) {
-    apply {
-        /**
-        * add the extracted headers to the packet 
-        * packet.emit(hdr.ethernet);
-        */
-    }
+	apply {
+		/**
+		* add the extracted headers to the packet 
+		* packet.emit(hdr.ethernet);
+		*/
+	}
 }
 
 /*************************************************************************
