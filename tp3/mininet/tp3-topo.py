@@ -62,8 +62,11 @@ args = parser.parse_args()
 sw_mac_base = "00:aa:bb:00:00:%02x"
 host_mac_base = "00:04:00:00:00:%02x"
 
-sw_ip_base = "10.0.%d.254"
-host_ip_base =  "10.0.%d.1/24"
+sw_ip_base = "10.0.%d.1"
+host_ip_base =  "10.0.%d.100/24"
+
+sw_ip_base_server = "192.168.1.1"
+server_ip =  "192.168.1.10/24"
 
 
 class SingleSwitchTopo(Topo):
@@ -77,15 +80,25 @@ class SingleSwitchTopo(Topo):
                                 thrift_port = thrift_port)
         # adding host and link with the right mac and ip addrs
         # declaring a link: addr2=sw_mac gives a mac to the switch port
-        for h in range(n):
+        for h in range(n-1):
             host = self.addHost('h%d' % (h + 1),
                                 ip = host_ip_base % (h + 1),
                                 mac = host_mac_base % (h + 1))
+            print('h%d' % (h + 1))
             sw_mac = sw_mac_base % (h + 1)
             self.addLink(host, switch, addr2=sw_mac)
+        #'''
+        # We keep MAC adress
+        h = 3
+        host = self.addHost('h%d' % (h + 1),
+                            ip = server_ip,
+                            mac = host_mac_base % (h + 1))
+        sw_mac = sw_mac_base % (h + 1)
+        self.addLink(host, switch, addr2=sw_mac)
+        #'''
 
 def main():
-    num_hosts = args.num_hosts
+    num_hosts = 4#args.num_hosts
 
     topo = SingleSwitchTopo(args.behavioral_exe,
                             args.json,
@@ -108,7 +121,9 @@ def main():
     sw_mac = [sw_mac_base % (n + 1) for n in range(num_hosts)]
     # an array of the ip addrs from the switch 
     # they are only used to define defaultRoutes on hosts 
-    sw_addr = [sw_ip_base % (n + 1) for n in range(num_hosts)]
+    sw_addr = [sw_ip_base % (n + 1) for n in range(num_hosts-1)]
+
+    sw_addr.append(sw_ip_base_server)
 
     # h.setARP() populates the arp table of the host
     # h.setDefaultRoute() sets the defaultRoute for the host
