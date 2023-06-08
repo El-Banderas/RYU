@@ -13,6 +13,7 @@
 const bit<16> TYPE_IPV4 = 0x800;
 const bit<8> TYPE_TCP  = 0x06;
 const bit<8> TYPE_UDP  = 0x11;
+const bit<8> TYPE_ICMP  = 0x01;
 
 /*************************************************************************
 *********************** H E A D E R S  ***********************************
@@ -67,6 +68,12 @@ header tcp_t {
     bit<16> urgentPtr;
 }
 
+header udp_t {
+	bit<16> srcPort;
+	bit<16> dstPort;
+	bit<16> length;
+	bit<16> csum;
+}
 
 /**
 * You can use this structure to pass 
@@ -82,6 +89,7 @@ struct headers {
     ethernet_t   ethernet;
     ipv4_t       ipv4;
     tcp_t        tcp;
+	udp_t      udp;
 }
 
 /*************************************************************************
@@ -111,8 +119,25 @@ parser MyParser(packet_in packet,
     }
     state parse_ipv4 {
         packet.extract(hdr.ipv4); // extract function populates the ipv4 header
-        transition accept;
+
+		transition select(hdr.ipv4.protocol) {
+			TYPE_TCP: parse_tcp;
+			TYPE_UDP: parse_udp;
+			TYPE_ICMP: parse_icmp;
+		}
     }
+    state parse_icmp {
+		transition accept;
+	}
+    state parse_tcp {
+		packet.extract(hdr.tcp);
+		transition accept;
+	}
+
+	state parse_udp {
+		packet.extract(hdr.udp);
+		transition accept;
+	}
 }
 
 /*************************************************************************
@@ -134,18 +159,33 @@ control MyIngress(inout headers hdr,
     action drop() {
         mark_to_drop(standard_metadata);
     }
-
+    
     /**
     * this is your main pipeline
     * where we define the actions and tables
     */
+
+    action ipv4_dst_rwA(ip4Addr_t new_ipv4) {
+        hdr.ipv4.dstAddr  = new_ipv4;
+    }
+    
+    table dst_rw {
+        key = { hdr.ipv4.dstAddr  : exact; }
+        actions = {
+            ipv4_dst_rwA;
+            drop;
+            NoAction;
+        }
+        default_action = NoAction(); // NoAction is defined in v1model - does nothing
+        }
+
 // Rewrite src add
     action ipv4_rwA(ip4Addr_t new_ipv4) {
         hdr.ipv4.srcAddr  = new_ipv4;
     }
     
     table src_rw {
-        key = { hdr.ipv4.srcAddr  : exact;  meta.next_hop_ipv4 : exact; }
+        key = { hdr.ipv4.srcAddr  : exact; hdr.ipv4.dstAddr  : exact;}
         actions = {
             ipv4_rwA;
             drop;
@@ -205,6 +245,8 @@ control MyIngress(inout headers hdr,
         * switch must apply the tables. 
         */
         if (hdr.ipv4.isValid()) {
+            src_rw.apply();
+            dst_rw.apply();
             ipv4_lpm.apply();
             src_mac.apply();
             dst_mac.apply();
@@ -260,6 +302,8 @@ control MyDeparser(packet_out packet, in headers hdr) {
         */
         packet.emit(hdr.ethernet);
         packet.emit(hdr.ipv4);
+        packet.emit(hdr.udp);
+        packet.emit(hdr.tcp);
     }
 }
 
