@@ -61,7 +61,7 @@ struct headers {
     ethernet_t   ethernet;
     ipv4_t       ipv4;
     tcp_t        tcp;
-	udp_t      udp;
+	udp_t        udp;
 }
 
 parser MyParser(packet_in packet,
