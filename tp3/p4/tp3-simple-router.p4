@@ -165,29 +165,16 @@ control MyIngress(inout headers hdr,
     * where we define the actions and tables
     */
 
-    action ipv4_dst_rwA(ip4Addr_t new_ipv4) {
-        hdr.ipv4.dstAddr  = new_ipv4;
+   // Rewrite src add
+    action snat_translate(ip4Addr_t nat_ip_src, bit<16> src_port) {
+        hdr.ipv4.srcAddr  = nat_ip_src;
+        hdr.tcp.srcPort  = src_port;
     }
     
-    table dst_rw {
-        key = { hdr.ipv4.dstAddr  : exact; }
+    table snat {
+        key = { hdr.ipv4.srcAddr  : exact; hdr.ipv4.dstAddr  : exact; hdr.tcp.srcPort : exact;hdr.tcp.dstPort : exact;}
         actions = {
-            ipv4_dst_rwA;
-            drop;
-            NoAction;
-        }
-        default_action = NoAction(); // NoAction is defined in v1model - does nothing
-        }
-
-// Rewrite src add
-    action ipv4_rwA(ip4Addr_t new_ipv4) {
-        hdr.ipv4.srcAddr  = new_ipv4;
-    }
-    
-    table src_rw {
-        key = { hdr.ipv4.srcAddr  : exact; hdr.ipv4.dstAddr  : exact;}
-        actions = {
-            ipv4_rwA;
+            snat_translate;
             drop;
             NoAction;
         }
@@ -245,8 +232,7 @@ control MyIngress(inout headers hdr,
         * switch must apply the tables. 
         */
         if (hdr.ipv4.isValid()) {
-            src_rw.apply();
-            dst_rw.apply();
+            snat.apply();
             ipv4_lpm.apply();
             src_mac.apply();
             dst_mac.apply();
