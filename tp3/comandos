@@ -1,0 +1,12 @@
+
+# Compile
+p4c-bm2-ss --p4v 16 p4/tp3-routerNAT.p4 -o json/tp3-routerNAT.json
+
+# Run
+sudo python mininet/tp3-topo.py --json json/tp3-routerNAT.json
+
+# Debug:
+sudo tools/nanomsg_client.py --thrift-port 9090
+
+# Inject rules
+simple_switch_CLI --thrift-port 9090 < commands/commands.txt
