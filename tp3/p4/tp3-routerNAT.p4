@@ -55,18 +55,18 @@ header udp_t {
 
 
 struct metadata {
-    ip4Addr_t next_hop_ipv4;
-    port_t    src_port_to_add;
-    port_t    src_port_message;
-    bool      is_tcp;
-    bit<16>   tcp_length;
+	ip4Addr_t next_hop_ipv4;
+	port_t    src_port_to_add;
+	port_t    src_port_message;
+	bool      is_tcp;
+	bit<16>   tcp_length;
 }
 
 struct headers {
 	ethernet_t ethernet;
 	ipv4_t     ipv4;
 	tcp_t      tcp;
-    udp_t      udp;
+	udp_t      udp;
 }
 
 /*************************************************************************
@@ -104,7 +104,7 @@ parser MyParser(packet_in packet,
 		transition accept;
 	}
 
-    state parse_udp {
+	state parse_udp {
 		packet.extract(hdr.udp);
 		meta.is_tcp = false;
 		meta.src_port_message = hdr.udp.dstPort;
@@ -137,68 +137,68 @@ control MyIngress(inout headers hdr,
 	
 	// NAT...
 
-    action snat_translate(ip4Addr_t nat_src, port_t nat_port) {
-        hdr.ipv4.srcAddr = nat_src;
+	action snat_translate(ip4Addr_t nat_src, port_t nat_port) {
+		hdr.ipv4.srcAddr = nat_src;
 		if (meta.is_tcp) {
-        	hdr.tcp.srcPort =  hdr.tcp.srcPort + nat_port;
+			hdr.tcp.srcPort =  hdr.tcp.srcPort + nat_port;
 		} else {
-        	hdr.udp.srcPort =  hdr.udp.srcPort + nat_port;
+			hdr.udp.srcPort =  hdr.udp.srcPort + nat_port;
 		}
-    }
-    
-    table snat {
-        key = {
+	}
+	
+	table snat {
+		key = {
 			hdr.ipv4.srcAddr : exact;
 		}
-        actions = {
-            snat_translate;
-            NoAction;
-            drop;
-        }
-        default_action = NoAction();
-    }
-
-    action dnat_translate(ip4Addr_t nat_dst) {
-        hdr.ipv4.dstAddr = nat_dst;
-		if (meta.is_tcp) {
-        	hdr.tcp.dstPort = hdr.tcp.dstPort - meta.src_port_to_add;
-		} else {
-        	hdr.udp.dstPort = hdr.udp.dstPort - meta.src_port_to_add;
+		actions = {
+			snat_translate;
+			NoAction;
+			drop;
 		}
-    }
-    
-    table dnat {
-        key = { 
-            hdr.ipv4.srcAddr : exact; 
-            meta.src_port_to_add : exact;
-        }
-        actions = {
-            dnat_translate;
-            NoAction;
-            drop;
-        }
-        default_action = NoAction();
-    }
+		default_action = NoAction();
+	}
+
+	action dnat_translate(ip4Addr_t nat_dst) {
+		hdr.ipv4.dstAddr = nat_dst;
+		if (meta.is_tcp) {
+			hdr.tcp.dstPort = hdr.tcp.dstPort - meta.src_port_to_add;
+		} else {
+			hdr.udp.dstPort = hdr.udp.dstPort - meta.src_port_to_add;
+		}
+	}
 	
-    
+	table dnat {
+		key = { 
+			hdr.ipv4.srcAddr : exact; 
+			meta.src_port_to_add : exact;
+		}
+		actions = {
+			dnat_translate;
+			NoAction;
+			drop;
+		}
+		default_action = NoAction();
+	}
+	
+	
 	/* Normal routing stuff... */
 
-    // Find next hop
-    action ipv4_fwd(ip4Addr_t nxt_hop, egressSpec_t port) {
-        meta.next_hop_ipv4 = nxt_hop;
-        standard_metadata.egress_spec = port;
-        hdr.ipv4.ttl = hdr.ipv4.ttl - 1;
-    }
-    
-    table ipv4_lpm {
-        key = { hdr.ipv4.dstAddr : lpm; }
-        actions = {
-            ipv4_fwd;
-            drop;
-            NoAction;
-        }
-        default_action = drop; // NoAction is defined in v1model - does nothing
-    }
+	// Find next hop
+	action ipv4_fwd(ip4Addr_t nxt_hop, egressSpec_t port) {
+		meta.next_hop_ipv4 = nxt_hop;
+		standard_metadata.egress_spec = port;
+		hdr.ipv4.ttl = hdr.ipv4.ttl - 1;
+	}
+	
+	table ipv4_lpm {
+		key = { hdr.ipv4.dstAddr : lpm; }
+		actions = {
+			ipv4_fwd;
+			drop;
+			NoAction;
+		}
+		default_action = drop; // NoAction is defined in v1model - does nothing
+	}
 
 	// Alterar src MAC
 	action rewrite_src_mac(macAddr_t src_mac) {
@@ -230,33 +230,33 @@ control MyIngress(inout headers hdr,
 	}
 
 
-    apply {
-        if (hdr.ipv4.isValid()) {
-            if (meta.src_port_message > 6000 && meta.src_port_message < 7000){
-                meta.src_port_to_add = 1000;
-            }
-            if (meta.src_port_message > 7000 && meta.src_port_message < 8000){
-                meta.src_port_to_add = 2000;
-            }
-            if (meta.src_port_message > 8000 && meta.src_port_message < 9000){
-                meta.src_port_to_add = 3000;
-            }
+	apply {
+		if (hdr.ipv4.isValid()) {
+			if (meta.src_port_message > 6000 && meta.src_port_message < 7000){
+				meta.src_port_to_add = 1000;
+			}
+			if (meta.src_port_message > 7000 && meta.src_port_message < 8000){
+				meta.src_port_to_add = 2000;
+			}
+			if (meta.src_port_message > 8000 && meta.src_port_message < 9000){
+				meta.src_port_to_add = 3000;
+			}
 
 			// NAT first
-            snat.apply();
-            dnat.apply();
+			snat.apply();
+			dnat.apply();
 
 			// Then routing
-            ipv4_lpm.apply();
-            src_mac.apply();
-            dst_mac.apply();
-        }
+			ipv4_lpm.apply();
+			src_mac.apply();
+			dst_mac.apply();
+		}
 
 		// TODO: put this in MyComputeChecksum
 		if (!meta.is_tcp){
 			hdr.udp.csum = 0;
 		}
-    }
+	}
 }
 
 /*************************************************************************
