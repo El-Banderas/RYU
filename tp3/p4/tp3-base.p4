@@ -75,13 +75,13 @@ header tcp_t {
 * variables inside this structure.
 */
 struct metadata {
-	ip4Addr_t next_hop_ipv4;
+	ip4Addr_t   next_hop_ipv4;
 }
 /* all the headers previously defined */
 struct headers {
-	ethernet_t ethernet;
-	ipv4_t     ipv4;
-	tcp_t      tcp;
+	ethernet_t   ethernet;
+	ipv4_t       ipv4;
+	tcp_t        tcp;
 }
 
 /*************************************************************************
@@ -102,16 +102,17 @@ parser MyParser(packet_in packet,
 		transition parse_ethernet;
 	}
 
-	/*
 	state parse_ethernet {
 		packet.extract(hdr.ethernet);
 		transition select(hdr.ethernet.etherType) {
-			TYPE_IPV4:  <the name of the ipv4 parser>
+			TYPE_IPV4:  parse_ipv4;
 			default: accept;
 		}
 	}
-	*/
-
+	state parse_ipv4 {
+		packet.extract(hdr.ipv4); // extract function populates the ipv4 header
+		transition accept;
+	}
 }
 
 /*************************************************************************
@@ -138,14 +139,79 @@ control MyIngress(inout headers hdr,
 	* this is your main pipeline
 	* where we define the actions and tables
 	*/
+	// Rewrite src add
+	action ipv4_rwA(ip4Addr_t new_ipv4) {
+		hdr.ipv4.srcAddr  = hdr.ipv4.srcAddr;
+	}
+	
+	table src_rw {
+		key = { hdr.ipv4.srcAddr  : lpm; }
+		actions = {
+			ipv4_rwA;
+			drop;
+			NoAction;
+		}
+		default_action = NoAction(); // NoAction is defined in v1model - does nothing
+		}
 
+
+	// Find next hop
+	action ipv4_fwd(ip4Addr_t nxt_hop, egressSpec_t port) {
+		meta.next_hop_ipv4 = nxt_hop;
+		standard_metadata.egress_spec = port;
+		hdr.ipv4.ttl = hdr.ipv4.ttl - 1;
+	}
 	
-	
+	table ipv4_lpm {
+		key = { hdr.ipv4.dstAddr : lpm; }
+		actions = {
+			ipv4_fwd;
+			drop;
+			NoAction;
+		}
+		default_action = NoAction(); // NoAction is defined in v1model - does nothing
+		}
+
+	// Alterar src MAC
+	action rewrite_src_mac(macAddr_t src_mac) {
+		hdr.ethernet.srcAddr = src_mac;
+	}
+
+	table src_mac {
+		key = { standard_metadata.egress_spec : exact; }
+		actions = {
+			rewrite_src_mac;
+			drop;
+		}
+		default_action = drop;
+	}
+
+	// Alterar MAC destino    
+	action rewrite_dst_mac(macAddr_t dst_mac) {
+		hdr.ethernet.dstAddr = dst_mac;
+	}
+
+	// Vai buscar o IP guardado no meta (do utilizador)
+	table dst_mac {
+		key = { meta.next_hop_ipv4 : exact; }
+		actions = {
+			rewrite_dst_mac;
+			drop;
+		}
+		default_action = drop;
+	}
+
 	apply {
 		/**
 		* The conditions and order in which the software 
 		* switch must apply the tables. 
 		*/
+		if (hdr.ipv4.isValid()) {
+			ipv4_lpm.apply();
+			src_mac.apply();
+			dst_mac.apply();
+			//src_rw.apply();
+		}
 	}
 }
 
@@ -194,6 +260,8 @@ control MyDeparser(packet_out packet, in headers hdr) {
 		* add the extracted headers to the packet 
 		* packet.emit(hdr.ethernet);
 		*/
+		packet.emit(hdr.ethernet);
+		packet.emit(hdr.ipv4);
 	}
 }
 

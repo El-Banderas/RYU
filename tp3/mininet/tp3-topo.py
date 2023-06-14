@@ -49,13 +49,13 @@ from time import sleep
 ## this is the only argument that you will need to pass in orther to run the script
 parser = argparse.ArgumentParser(description='Mininet demo')
 parser.add_argument('--behavioral-exe', help='Path to behavioral executable',
-                    type=str, action="store", default='simple_switch')
+					type=str, action="store", default='simple_switch')
 parser.add_argument('--thrift-port', help='Thrift server port for table updates',
-                    type=int, action="store", default=9090)
+					type=int, action="store", default=9090)
 parser.add_argument('--num-hosts', help='Number of hosts to connect to switch',
-                    type=int, action="store", default=2)
+					type=int, action="store", default=2)
 parser.add_argument('--json', help='Path to JSON config file',
-                    type=str, action="store", required=True)
+					type=str, action="store", required=True)
 
 args = parser.parse_args()
 
@@ -70,81 +70,81 @@ server_ip =  "192.168.1.10/24"
 
 
 class SingleSwitchTopo(Topo):
-    def __init__(self, sw_path, json_path, thrift_port, n, **opts):
-        # Initialize topology and default options
-        Topo.__init__(self, **opts)
-        # adding a P4Switch
-        switch = self.addSwitch('s1',
-                                sw_path = sw_path,
-                                json_path = json_path,
-                                thrift_port = thrift_port)
-        # adding host and link with the right mac and ip addrs
-        # declaring a link: addr2=sw_mac gives a mac to the switch port
-        for h in range(n-1):
-            host = self.addHost('h%d' % (h + 1),
-                                ip = host_ip_base % (h + 1),
-                                mac = host_mac_base % (h + 1))
-            print('h%d' % (h + 1))
-            sw_mac = sw_mac_base % (h + 1)
-            self.addLink(host, switch, addr2=sw_mac)
-        #'''
-        # We keep MAC adress
-        h = 3
-        host = self.addHost('h%d' % (h + 1),
-                            ip = server_ip,
-                            mac = host_mac_base % (h + 1))
-        sw_mac = sw_mac_base % (h + 1)
-        self.addLink(host, switch, addr2=sw_mac)
-        #'''
+	def __init__(self, sw_path, json_path, thrift_port, n, **opts):
+		# Initialize topology and default options
+		Topo.__init__(self, **opts)
+		# adding a P4Switch
+		switch = self.addSwitch('s1',
+								sw_path = sw_path,
+								json_path = json_path,
+								thrift_port = thrift_port)
+		# adding host and link with the right mac and ip addrs
+		# declaring a link: addr2=sw_mac gives a mac to the switch port
+		for h in range(n-1):
+			host = self.addHost('h%d' % (h + 1),
+								ip = host_ip_base % (h + 1),
+								mac = host_mac_base % (h + 1))
+			print('h%d' % (h + 1))
+			sw_mac = sw_mac_base % (h + 1)
+			self.addLink(host, switch, addr2=sw_mac)
+		#'''
+		# We keep MAC adress
+		h = 3
+		host = self.addHost('h%d' % (h + 1),
+							ip = server_ip,
+							mac = host_mac_base % (h + 1))
+		sw_mac = sw_mac_base % (h + 1)
+		self.addLink(host, switch, addr2=sw_mac)
+		#'''
 
 def main():
-    num_hosts = 4#args.num_hosts
+	num_hosts = 4#args.num_hosts
 
-    topo = SingleSwitchTopo(args.behavioral_exe,
-                            args.json,
-                            args.thrift_port,
-                            num_hosts)
+	topo = SingleSwitchTopo(args.behavioral_exe,
+							args.json,
+							args.thrift_port,
+							num_hosts)
 
-    # the host class is the P4Host
-    # the switch class is the P4Switch
-    net = Mininet(topo = topo,
-                  host = P4Host,
-                  switch = P4Switch,
-                  controller = None)
+	# the host class is the P4Host
+	# the switch class is the P4Switch
+	net = Mininet(topo = topo,
+				  host = P4Host,
+				  switch = P4Switch,
+				  controller = None)
 
-    # Here, the mininet will use the constructor (__init__()) of the P4Switch class, 
-    # with the arguments passed to the SingleSwitchTopo class in order to create 
-    # our software switch.
-    net.start()
+	# Here, the mininet will use the constructor (__init__()) of the P4Switch class, 
+	# with the arguments passed to the SingleSwitchTopo class in order to create 
+	# our software switch.
+	net.start()
 
-    # an array of the mac addrs from the switch
-    sw_mac = [sw_mac_base % (n + 1) for n in range(num_hosts)]
-    # an array of the ip addrs from the switch 
-    # they are only used to define defaultRoutes on hosts 
-    sw_addr = [sw_ip_base % (n + 1) for n in range(num_hosts-1)]
+	# an array of the mac addrs from the switch
+	sw_mac = [sw_mac_base % (n + 1) for n in range(num_hosts)]
+	# an array of the ip addrs from the switch 
+	# they are only used to define defaultRoutes on hosts 
+	sw_addr = [sw_ip_base % (n + 1) for n in range(num_hosts-1)]
 
-    sw_addr.append(sw_ip_base_server)
+	sw_addr.append(sw_ip_base_server)
 
-    # h.setARP() populates the arp table of the host
-    # h.setDefaultRoute() sets the defaultRoute for the host
-    # populating the arp table of the host with the switch ip and switch mac
-    # avoids the need for arp request from the host
-    for n in range(num_hosts):
-        h = net.get('h%d' % (n + 1))
-        h.setARP(sw_addr[n], sw_mac[n])
-        h.setDefaultRoute("dev eth0 via %s" % sw_addr[n])
+	# h.setARP() populates the arp table of the host
+	# h.setDefaultRoute() sets the defaultRoute for the host
+	# populating the arp table of the host with the switch ip and switch mac
+	# avoids the need for arp request from the host
+	for n in range(num_hosts):
+		h = net.get('h%d' % (n + 1))
+		h.setARP(sw_addr[n], sw_mac[n])
+		h.setDefaultRoute("dev eth0 via %s" % sw_addr[n])
 
-    for n in range(num_hosts):
-        h = net.get('h%d' % (n + 1))
-        h.describe()
+	for n in range(num_hosts):
+		h = net.get('h%d' % (n + 1))
+		h.describe()
 
-    sleep(1)  # time for the host and switch confs to take effect
+	sleep(1)  # time for the host and switch confs to take effect
 
-    print("Ready !")
+	print("Ready !")
 
-    CLI( net )
-    net.stop()
+	CLI( net )
+	net.stop()
 
 if __name__ == '__main__':
-    setLogLevel( 'info' )
-    main()
+	setLogLevel( 'info' )
+	main()
