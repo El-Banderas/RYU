@@ -5,7 +5,7 @@ Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
 
-    http://www.apache.org/licenses/LICENSE-2.0
+	http://www.apache.org/licenses/LICENSE-2.0
 
 Unless required by applicable law or agreed to in writing, software
 distributed under the License is distributed on an "AS IS" BASIS,
@@ -47,11 +47,11 @@ limitations under the License.
 #endif
 
 match_kind {
-    range,
-    // Either an exact match, or a wildcard (matching any value).
-    optional,
-    // Used for implementing dynamic_action_selection
-    selector
+	range,
+	// Either an exact match, or a wildcard (matching any value).
+	optional,
+	// Used for implementing dynamic_action_selection
+	selector
 }
 
 const bit<32> __v1model_version = V1MODEL_VERSION;
@@ -63,65 +63,65 @@ typedef bit<9>  PortId_t;       // should not be a constant size?
 @metadata @name("standard_metadata")
 struct standard_metadata_t {
 #if V1MODEL_VERSION >= 20200408
-    PortId_t    ingress_port;
-    PortId_t    egress_spec;
-    PortId_t    egress_port;
+	PortId_t    ingress_port;
+	PortId_t    egress_spec;
+	PortId_t    egress_port;
 #else
-    bit<9>      ingress_port;
-    bit<9>      egress_spec;
-    bit<9>      egress_port;
+	bit<9>      ingress_port;
+	bit<9>      egress_spec;
+	bit<9>      egress_port;
 #endif
-    bit<32>     instance_type;
-    bit<32>     packet_length;
-    //
-    // @alias is used to generate the field_alias section of the BMV2 JSON.
-    // Field alias creates a mapping from the metadata name in P4 program to
-    // the behavioral model's internal metadata name. Here we use it to
-    // expose all metadata supported by simple switch to the user through
-    // standard_metadata_t.
-    //
-    // flattening fields that exist in bmv2-ss
-    // queueing metadata
-    @alias("queueing_metadata.enq_timestamp")
-    bit<32> enq_timestamp;
-    @alias("queueing_metadata.enq_qdepth")
-    bit<19> enq_qdepth;
-    @alias("queueing_metadata.deq_timedelta")
-    bit<32> deq_timedelta;
-    /// queue depth at the packet dequeue time.
-    @alias("queueing_metadata.deq_qdepth")
-    bit<19> deq_qdepth;
+	bit<32>     instance_type;
+	bit<32>     packet_length;
+	//
+	// @alias is used to generate the field_alias section of the BMV2 JSON.
+	// Field alias creates a mapping from the metadata name in P4 program to
+	// the behavioral model's internal metadata name. Here we use it to
+	// expose all metadata supported by simple switch to the user through
+	// standard_metadata_t.
+	//
+	// flattening fields that exist in bmv2-ss
+	// queueing metadata
+	@alias("queueing_metadata.enq_timestamp")
+	bit<32> enq_timestamp;
+	@alias("queueing_metadata.enq_qdepth")
+	bit<19> enq_qdepth;
+	@alias("queueing_metadata.deq_timedelta")
+	bit<32> deq_timedelta;
+	/// queue depth at the packet dequeue time.
+	@alias("queueing_metadata.deq_qdepth")
+	bit<19> deq_qdepth;
 
-    // intrinsic metadata
-    @alias("intrinsic_metadata.ingress_global_timestamp")
-    bit<48> ingress_global_timestamp;
-    @alias("intrinsic_metadata.egress_global_timestamp")
-    bit<48> egress_global_timestamp;
-    /// multicast group id (key for the mcast replication table)
-    @alias("intrinsic_metadata.mcast_grp")
-    bit<16> mcast_grp;
-    /// Replication ID for multicast
-    @alias("intrinsic_metadata.egress_rid")
-    bit<16> egress_rid;
-    /// Indicates that a verify_checksum() method has failed.
-    /// 1 if a checksum error was found, otherwise 0.
-    bit<1>  checksum_error;
-    /// Error produced by parsing
-    error parser_error;
-    /// set packet priority
-    @alias("intrinsic_metadata.priority")
-    bit<3> priority;
+	// intrinsic metadata
+	@alias("intrinsic_metadata.ingress_global_timestamp")
+	bit<48> ingress_global_timestamp;
+	@alias("intrinsic_metadata.egress_global_timestamp")
+	bit<48> egress_global_timestamp;
+	/// multicast group id (key for the mcast replication table)
+	@alias("intrinsic_metadata.mcast_grp")
+	bit<16> mcast_grp;
+	/// Replication ID for multicast
+	@alias("intrinsic_metadata.egress_rid")
+	bit<16> egress_rid;
+	/// Indicates that a verify_checksum() method has failed.
+	/// 1 if a checksum error was found, otherwise 0.
+	bit<1>  checksum_error;
+	/// Error produced by parsing
+	error parser_error;
+	/// set packet priority
+	@alias("intrinsic_metadata.priority")
+	bit<3> priority;
 }
 
 enum CounterType {
-    packets,
-    bytes,
-    packets_and_bytes
+	packets,
+	bytes,
+	packets_and_bytes
 }
 
 enum MeterType {
-    packets,
-    bytes
+	packets,
+	bytes
 }
 
 extern counter
@@ -129,73 +129,73 @@ extern counter
 <I>
 #endif
 {
-    /***
-     * A counter object is created by calling its constructor.  This
-     * creates an array of counter states, with the number of counter
-     * states specified by the size parameter.  The array indices are
-     * in the range [0, size-1].
-     *
-     * You must provide a choice of whether to maintain only a packet
-     * count (CounterType.packets), only a byte count
-     * (CounterType.bytes), or both (CounterType.packets_and_bytes).
-     *
-     * Counters can be updated from your P4 program, but can only be
-     * read from the control plane.  If you need something that can be
-     * both read and written from the P4 program, consider using a
-     * register.
-     */
-    counter(bit<32> size, CounterType type);
-    // FIXME -- size arg should be `int` but that breaks typechecking
+	/***
+	 * A counter object is created by calling its constructor.  This
+	 * creates an array of counter states, with the number of counter
+	 * states specified by the size parameter.  The array indices are
+	 * in the range [0, size-1].
+	 *
+	 * You must provide a choice of whether to maintain only a packet
+	 * count (CounterType.packets), only a byte count
+	 * (CounterType.bytes), or both (CounterType.packets_and_bytes).
+	 *
+	 * Counters can be updated from your P4 program, but can only be
+	 * read from the control plane.  If you need something that can be
+	 * both read and written from the P4 program, consider using a
+	 * register.
+	 */
+	counter(bit<32> size, CounterType type);
+	// FIXME -- size arg should be `int` but that breaks typechecking
 
-    /***
-     * count() causes the counter state with the specified index to be
-     * read, modified, and written back, atomically relative to the
-     * processing of other packets, updating the packet count, byte
-     * count, or both, depending upon the CounterType of the counter
-     * instance used when it was constructed.
-     *
-     * @param index The index of the counter state in the array to be
-     *              updated, normally a value in the range [0,
-     *              size-1].  If index >= size, no counter state will be
-     *              updated.
-     */
+	/***
+	 * count() causes the counter state with the specified index to be
+	 * read, modified, and written back, atomically relative to the
+	 * processing of other packets, updating the packet count, byte
+	 * count, or both, depending upon the CounterType of the counter
+	 * instance used when it was constructed.
+	 *
+	 * @param index The index of the counter state in the array to be
+	 *              updated, normally a value in the range [0,
+	 *              size-1].  If index >= size, no counter state will be
+	 *              updated.
+	 */
 #if V1MODEL_VERSION >= 20200408
-    void count(in I index);
+	void count(in I index);
 #else
-    void count(in bit<32> index);
+	void count(in bit<32> index);
 #endif
 }
 
 extern direct_counter {
-    /***
-     * A direct_counter object is created by calling its constructor.
-     * You must provide a choice of whether to maintain only a packet
-     * count (CounterType.packets), only a byte count
-     * (CounterType.bytes), or both (CounterType.packets_and_bytes).
-     * After constructing the object, you can associate it with at
-     * most one table, by adding the following table property to the
-     * definition of that table:
-     *
-     *     counters = <object_name>;
-     *
-     * Counters can be updated from your P4 program, but can only be
-     * read from the control plane.  If you need something that can be
-     * both read and written from the P4 program, consider using a
-     * register.
-     */
-    direct_counter(CounterType type);
-    /***
-     * The count() method is actually unnecessary in the v1model
-     * architecture.  This is because after a direct_counter object
-     * has been associated with a table as described in the
-     * documentation for the direct_counter constructor, every time
-     * the table is applied and a table entry is matched, the counter
-     * state associated with the matching entry is read, modified, and
-     * written back, atomically relative to the processing of other
-     * packets, regardless of whether the count() method is called in
-     * the body of that action.
-     */
-    void count();
+	/***
+	 * A direct_counter object is created by calling its constructor.
+	 * You must provide a choice of whether to maintain only a packet
+	 * count (CounterType.packets), only a byte count
+	 * (CounterType.bytes), or both (CounterType.packets_and_bytes).
+	 * After constructing the object, you can associate it with at
+	 * most one table, by adding the following table property to the
+	 * definition of that table:
+	 *
+	 *     counters = <object_name>;
+	 *
+	 * Counters can be updated from your P4 program, but can only be
+	 * read from the control plane.  If you need something that can be
+	 * both read and written from the P4 program, consider using a
+	 * register.
+	 */
+	direct_counter(CounterType type);
+	/***
+	 * The count() method is actually unnecessary in the v1model
+	 * architecture.  This is because after a direct_counter object
+	 * has been associated with a table as described in the
+	 * documentation for the direct_counter constructor, every time
+	 * the table is applied and a table entry is matched, the counter
+	 * state associated with the matching entry is read, modified, and
+	 * written back, atomically relative to the processing of other
+	 * packets, regardless of whether the count() method is called in
+	 * the body of that action.
+	 */
+	void count();
 }
 
 #define V1MODEL_METER_COLOR_GREEN  0
@@ -207,83 +207,83 @@ extern meter
 <I>
 #endif
 {
-    /***
-     * A meter object is created by calling its constructor.  This
-     * creates an array of meter states, with the number of meter
-     * states specified by the size parameter.  The array indices are
-     * in the range [0, size-1].  For example, if in your system you
-     * have 128 different "flows" numbered from 0 up to 127, and you
-     * want to meter each of those flows independently of each other,
-     * you could do so by creating a meter object with size=128.
-     *
-     * You must provide a choice of whether to meter based on the
-     * number of packets, regardless of their size
-     * (MeterType.packets), or based upon the number of bytes the
-     * packets contain (MeterType.bytes).
-     */
-    meter(bit<32> size, MeterType type);
-    // FIXME -- size arg should be `int` but that breaks typechecking
+	/***
+	 * A meter object is created by calling its constructor.  This
+	 * creates an array of meter states, with the number of meter
+	 * states specified by the size parameter.  The array indices are
+	 * in the range [0, size-1].  For example, if in your system you
+	 * have 128 different "flows" numbered from 0 up to 127, and you
+	 * want to meter each of those flows independently of each other,
+	 * you could do so by creating a meter object with size=128.
+	 *
+	 * You must provide a choice of whether to meter based on the
+	 * number of packets, regardless of their size
+	 * (MeterType.packets), or based upon the number of bytes the
+	 * packets contain (MeterType.bytes).
+	 */
+	meter(bit<32> size, MeterType type);
+	// FIXME -- size arg should be `int` but that breaks typechecking
 
-    /***
-     * execute_meter() causes the meter state with the specified index
-     * to be read, modified, and written back, atomically relative to
-     * the processing of other packets, and an integer encoding of one
-     * of the colors green, yellow, or red to be written to the result
-     * out parameter.
-     *
-     * @param index The index of the meter state in the array to be
-     *              updated, normally a value in the range [0,
-     *              size-1].  If index >= size, no meter state will be
-     *              updated.
-     * @param result Type T must be bit<W> with W >= 2.  When index is
-     *              in range, the value of result will be assigned 0
-     *              for color GREEN, 1 for color YELLOW, and 2 for
-     *              color RED (see RFC 2697 and RFC 2698 for the
-     *              meaning of these colors).  When index is out of
-     *              range, the final value of result is not specified,
-     *              and should be ignored by the caller.
-     */
+	/***
+	 * execute_meter() causes the meter state with the specified index
+	 * to be read, modified, and written back, atomically relative to
+	 * the processing of other packets, and an integer encoding of one
+	 * of the colors green, yellow, or red to be written to the result
+	 * out parameter.
+	 *
+	 * @param index The index of the meter state in the array to be
+	 *              updated, normally a value in the range [0,
+	 *              size-1].  If index >= size, no meter state will be
+	 *              updated.
+	 * @param result Type T must be bit<W> with W >= 2.  When index is
+	 *              in range, the value of result will be assigned 0
+	 *              for color GREEN, 1 for color YELLOW, and 2 for
+	 *              color RED (see RFC 2697 and RFC 2698 for the
+	 *              meaning of these colors).  When index is out of
+	 *              range, the final value of result is not specified,
+	 *              and should be ignored by the caller.
+	 */
 #if V1MODEL_VERSION >= 20200408
-    void execute_meter<T>(in I index, out T result);
+	void execute_meter<T>(in I index, out T result);
 #else
-    void execute_meter<T>(in bit<32> index, out T result);
+	void execute_meter<T>(in bit<32> index, out T result);
 #endif
 }
 
 extern direct_meter<T> {
-    /***
-     * A direct_meter object is created by calling its constructor.
-     * You must provide a choice of whether to meter based on the
-     * number of packets, regardless of their size
-     * (MeterType.packets), or based upon the number of bytes the
-     * packets contain (MeterType.bytes).  After constructing the
-     * object, you can associate it with at most one table, by adding
-     * the following table property to the definition of that table:
-     *
-     *     meters = <object_name>;
-     */
-    direct_meter(MeterType type);
-    /***
-     * After a direct_meter object has been associated with a table as
-     * described in the documentation for the direct_meter
-     * constructor, every time the table is applied and a table entry
-     * is matched, the meter state associated with the matching entry
-     * is read, modified, and written back, atomically relative to the
-     * processing of other packets, regardless of whether the read()
-     * method is called in the body of that action.
-     *
-     * read() may only be called within an action executed as a result
-     * of matching a table entry, of a table that has a direct_meter
-     * associated with it.  Calling read() causes an integer encoding
-     * of one of the colors green, yellow, or red to be written to the
-     * result out parameter.
-     *
-     * @param result Type T must be bit<W> with W >= 2.  The value of
-     *              result will be assigned 0 for color GREEN, 1 for
-     *              color YELLOW, and 2 for color RED (see RFC 2697
-     *              and RFC 2698 for the meaning of these colors).
-     */
-    void read(out T result);
+	/***
+	 * A direct_meter object is created by calling its constructor.
+	 * You must provide a choice of whether to meter based on the
+	 * number of packets, regardless of their size
+	 * (MeterType.packets), or based upon the number of bytes the
+	 * packets contain (MeterType.bytes).  After constructing the
+	 * object, you can associate it with at most one table, by adding
+	 * the following table property to the definition of that table:
+	 *
+	 *     meters = <object_name>;
+	 */
+	direct_meter(MeterType type);
+	/***
+	 * After a direct_meter object has been associated with a table as
+	 * described in the documentation for the direct_meter
+	 * constructor, every time the table is applied and a table entry
+	 * is matched, the meter state associated with the matching entry
+	 * is read, modified, and written back, atomically relative to the
+	 * processing of other packets, regardless of whether the read()
+	 * method is called in the body of that action.
+	 *
+	 * read() may only be called within an action executed as a result
+	 * of matching a table entry, of a table that has a direct_meter
+	 * associated with it.  Calling read() causes an integer encoding
+	 * of one of the colors green, yellow, or red to be written to the
+	 * result out parameter.
+	 *
+	 * @param result Type T must be bit<W> with W >= 2.  The value of
+	 *              result will be assigned 0 for color GREEN, 1 for
+	 *              color YELLOW, and 2 for color RED (see RFC 2697
+	 *              and RFC 2698 for the meaning of these colors).
+	 */
+	void read(out T result);
 }
 
 #if V1MODEL_VERSION >= 20200408
@@ -292,69 +292,69 @@ extern register<T, I>
 extern register<T>
 #endif
 {
-    /***
-     * A register object is created by calling its constructor.  This
-     * creates an array of 'size' identical elements, each with type
-     * T.  The array indices are in the range [0, size-1].  For
-     * example, this constructor call:
-     *
-     *     register<bit<32>>(512) my_reg;
-     *
-     * allocates storage for 512 values, each with type bit<32>.
-     */
-    register(bit<32> size);  // FIXME -- arg should be `int` but that breaks typechecking
-    /***
-     * read() reads the state of the register array stored at the
-     * specified index, and returns it as the value written to the
-     * result parameter.
-     *
-     * @param index The index of the register array element to be
-     *              read, normally a value in the range [0, size-1].
-     * @param result Only types T that are bit<W> are currently
-     *              supported.  When index is in range, the value of
-     *              result becomes the value read from the register
-     *              array element.  When index >= size, the final
-     *              value of result is not specified, and should be
-     *              ignored by the caller.
-     */
-    @noSideEffects
+	/***
+	 * A register object is created by calling its constructor.  This
+	 * creates an array of 'size' identical elements, each with type
+	 * T.  The array indices are in the range [0, size-1].  For
+	 * example, this constructor call:
+	 *
+	 *     register<bit<32>>(512) my_reg;
+	 *
+	 * allocates storage for 512 values, each with type bit<32>.
+	 */
+	register(bit<32> size);  // FIXME -- arg should be `int` but that breaks typechecking
+	/***
+	 * read() reads the state of the register array stored at the
+	 * specified index, and returns it as the value written to the
+	 * result parameter.
+	 *
+	 * @param index The index of the register array element to be
+	 *              read, normally a value in the range [0, size-1].
+	 * @param result Only types T that are bit<W> are currently
+	 *              supported.  When index is in range, the value of
+	 *              result becomes the value read from the register
+	 *              array element.  When index >= size, the final
+	 *              value of result is not specified, and should be
+	 *              ignored by the caller.
+	 */
+	@noSideEffects
 #if V1MODEL_VERSION >= 20200408
-    void read(out T result, in I index);
+	void read(out T result, in I index);
 #else
-    void read(out T result, in bit<32> index);
+	void read(out T result, in bit<32> index);
 #endif
-    /***
-     * write() writes the state of the register array at the specified
-     * index, with the value provided by the value parameter.
-     *
-     * If you wish to perform a read() followed later by a write() to
-     * the same register array element, and you wish the
-     * read-modify-write sequence to be atomic relative to other
-     * processed packets, then there may be parallel implementations
-     * of the v1model architecture for which you must execute them in
-     * a P4_16 block annotated with an @atomic annotation.  See the
-     * P4_16 language specification description of the @atomic
-     * annotation for more details.
-     *
-     * @param index The index of the register array element to be
-     *              written, normally a value in the range [0,
-     *              size-1].  If index >= size, no register state will
-     *              be updated.
-     * @param value Only types T that are bit<W> are currently
-     *              supported.  When index is in range, this
-     *              parameter's value is written into the register
-     *              array element specified by index.
-     */
+	/***
+	 * write() writes the state of the register array at the specified
+	 * index, with the value provided by the value parameter.
+	 *
+	 * If you wish to perform a read() followed later by a write() to
+	 * the same register array element, and you wish the
+	 * read-modify-write sequence to be atomic relative to other
+	 * processed packets, then there may be parallel implementations
+	 * of the v1model architecture for which you must execute them in
+	 * a P4_16 block annotated with an @atomic annotation.  See the
+	 * P4_16 language specification description of the @atomic
+	 * annotation for more details.
+	 *
+	 * @param index The index of the register array element to be
+	 *              written, normally a value in the range [0,
+	 *              size-1].  If index >= size, no register state will
+	 *              be updated.
+	 * @param value Only types T that are bit<W> are currently
+	 *              supported.  When index is in range, this
+	 *              parameter's value is written into the register
+	 *              array element specified by index.
+	 */
 #if V1MODEL_VERSION >= 20200408
-    void write(in I index, in T value);
+	void write(in I index, in T value);
 #else
-    void write(in bit<32> index, in T value);
+	void write(in bit<32> index, in T value);
 #endif
 }
 
 // used as table implementation attribute
 extern action_profile {
-    action_profile(bit<32> size);
+	action_profile(bit<32> size);
 }
 
 /***
@@ -392,14 +392,14 @@ extern void random<T>(out T result, in T lo, in T hi);
 extern void digest<T>(in bit<32> receiver, in T data);
 
 enum HashAlgorithm {
-    crc32,
-    crc32_custom,
-    crc16,
-    crc16_custom,
-    random,
-    identity,
-    csum16,
-    xor16
+	crc32,
+	crc32_custom,
+	crc16,
+	crc16_custom,
+	random,
+	identity,
+	csum16,
+	xor16
 }
 
 @deprecated("Please use mark_to_drop(standard_metadata) instead.")
@@ -444,18 +444,18 @@ extern void mark_to_drop(inout standard_metadata_t standard_metadata);
 extern void hash<O, T, D, M>(out O result, in HashAlgorithm algo, in T base, in D data, in M max);
 
 extern action_selector {
-    action_selector(HashAlgorithm algorithm, bit<32> size, bit<32> outputWidth);
+	action_selector(HashAlgorithm algorithm, bit<32> size, bit<32> outputWidth);
 }
 
 enum CloneType {
-    I2E,
-    E2E
+	I2E,
+	E2E
 }
 
 @deprecated("Please use verify_checksum/update_checksum instead.")
 extern Checksum16 {
-    Checksum16();
-    bit<16> get<D>(in D data);
+	Checksum16();
+	bit<16> get<D>(in D data);
 }
 
 /***
@@ -722,9 +722,9 @@ extern void log_msg<T>(string msg, in T data);
  */
 
 parser Parser<H, M>(packet_in b,
-                    out H parsedHdr,
-                    inout M meta,
-                    inout standard_metadata_t standard_metadata);
+					out H parsedHdr,
+					inout M meta,
+					inout standard_metadata_t standard_metadata);
 
 /*
  * The only legal statements in the body of the VerifyChecksum control
@@ -732,15 +732,15 @@ parser Parser<H, M>(packet_in b,
  * verify_checksum_with_payload methods, and return statements.
  */
 control VerifyChecksum<H, M>(inout H hdr,
-                             inout M meta);
+							 inout M meta);
 @pipeline
 control Ingress<H, M>(inout H hdr,
-                      inout M meta,
-                      inout standard_metadata_t standard_metadata);
+					  inout M meta,
+					  inout standard_metadata_t standard_metadata);
 @pipeline
 control Egress<H, M>(inout H hdr,
-                     inout M meta,
-                     inout standard_metadata_t standard_metadata);
+					 inout M meta,
+					 inout standard_metadata_t standard_metadata);
 
 /*
  * The only legal statements in the body of the ComputeChecksum
@@ -748,7 +748,7 @@ control Egress<H, M>(inout H hdr,
  * update_checksum_with_payload methods, and return statements.
  */
 control ComputeChecksum<H, M>(inout H hdr,
-                              inout M meta);
+							  inout M meta);
 
 /*
  * The only legal statements in the body of the Deparser control are:
@@ -758,11 +758,11 @@ control ComputeChecksum<H, M>(inout H hdr,
 control Deparser<H>(packet_out b, in H hdr);
 
 package V1Switch<H, M>(Parser<H, M> p,
-                       VerifyChecksum<H, M> vr,
-                       Ingress<H, M> ig,
-                       Egress<H, M> eg,
-                       ComputeChecksum<H, M> ck,
-                       Deparser<H> dep
-                       );
+					   VerifyChecksum<H, M> vr,
+					   Ingress<H, M> ig,
+					   Egress<H, M> eg,
+					   ComputeChecksum<H, M> ck,
+					   Deparser<H> dep
+					   );
 
 #endif  /* _V1_MODEL_P4_ */

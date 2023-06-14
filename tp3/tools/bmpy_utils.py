@@ -31,92 +31,92 @@ from thrift.protocol import TMultiplexedProtocol
 
 
 def check_JSON_md5(client, json_src, out=sys.stdout):
-    with open(json_src, 'rb') as f:
-        m = hashlib.md5()
-        for L in f:
-            m.update(L)
-        md5sum = m.digest()
+	with open(json_src, 'rb') as f:
+		m = hashlib.md5()
+		for L in f:
+			m.update(L)
+		md5sum = m.digest()
 
-    def my_print(s):
-        out.write(s)
+	def my_print(s):
+		out.write(s)
 
-    try:
-        bm_md5sum = client.bm_get_config_md5()
-    except:
-        my_print("Error when requesting config md5 sum from switch\n")
-        sys.exit(1)
+	try:
+		bm_md5sum = client.bm_get_config_md5()
+	except:
+		my_print("Error when requesting config md5 sum from switch\n")
+		sys.exit(1)
 
-    if md5sum != bm_md5sum:
-        my_print("**********\n")
-        my_print("WARNING: the JSON files loaded into the switch and the one ")
-        my_print("you just provided to this CLI don't have the same md5 sum. ")
-        my_print("Are you sure they describe the same program?\n")
-        bm_md5sum_str = "".join("{:02x}".format(ord(c)) for c in bm_md5sum)
-        md5sum_str = "".join("{:02x}".format(ord(c)) for c in md5sum)
-        my_print("{:<15}: {}\n".format("switch md5", bm_md5sum_str))
-        my_print("{:<15}: {}\n".format("CLI input md5", md5sum_str))
-        my_print("**********\n")
+	if md5sum != bm_md5sum:
+		my_print("**********\n")
+		my_print("WARNING: the JSON files loaded into the switch and the one ")
+		my_print("you just provided to this CLI don't have the same md5 sum. ")
+		my_print("Are you sure they describe the same program?\n")
+		bm_md5sum_str = "".join("{:02x}".format(ord(c)) for c in bm_md5sum)
+		md5sum_str = "".join("{:02x}".format(ord(c)) for c in md5sum)
+		my_print("{:<15}: {}\n".format("switch md5", bm_md5sum_str))
+		my_print("{:<15}: {}\n".format("CLI input md5", md5sum_str))
+		my_print("**********\n")
 
 
 def get_json_config(standard_client=None, json_path=None, out=sys.stdout):
-    def my_print(s):
-        out.write(s)
+	def my_print(s):
+		out.write(s)
 
-    if json_path:
-        if standard_client is not None:
-            check_JSON_md5(standard_client, json_path)
-        with open(json_path, encoding="utf-8") as f:
-            return f.read()
-    else:
-        assert(standard_client is not None)
-        try:
-            my_print("Obtaining JSON from switch...\n")
-            json_cfg = standard_client.bm_get_config()
-            my_print("Done\n")
-        except:
-            my_print("Error when requesting JSON config from switch\n")
-            sys.exit(1)
-        return json_cfg
+	if json_path:
+		if standard_client is not None:
+			check_JSON_md5(standard_client, json_path)
+		with open(json_path, encoding="utf-8") as f:
+			return f.read()
+	else:
+		assert(standard_client is not None)
+		try:
+			my_print("Obtaining JSON from switch...\n")
+			json_cfg = standard_client.bm_get_config()
+			my_print("Done\n")
+		except:
+			my_print("Error when requesting JSON config from switch\n")
+			sys.exit(1)
+		return json_cfg
 
 # services is [(service_name, client_class), ...]
 
 
 def thrift_connect(thrift_ip, thrift_port, services, out=sys.stdout):
-    def my_print(s):
-        out.write(s)
+	def my_print(s):
+		out.write(s)
 
-    # Make socket
-    transport = TSocket.TSocket(thrift_ip, thrift_port)
-    # Buffering is critical. Raw sockets are very slow
-    transport = TTransport.TBufferedTransport(transport)
-    # Wrap in a protocol
-    bprotocol = TBinaryProtocol.TBinaryProtocol(transport)
+	# Make socket
+	transport = TSocket.TSocket(thrift_ip, thrift_port)
+	# Buffering is critical. Raw sockets are very slow
+	transport = TTransport.TBufferedTransport(transport)
+	# Wrap in a protocol
+	bprotocol = TBinaryProtocol.TBinaryProtocol(transport)
 
-    clients = []
+	clients = []
 
-    for service_name, service_cls in services:
-        if service_name is None:
-            clients.append(None)
-            continue
-        protocol = TMultiplexedProtocol.TMultiplexedProtocol(
-            bprotocol, service_name)
-        client = service_cls(protocol)
-        clients.append(client)
+	for service_name, service_cls in services:
+		if service_name is None:
+			clients.append(None)
+			continue
+		protocol = TMultiplexedProtocol.TMultiplexedProtocol(
+			bprotocol, service_name)
+		client = service_cls(protocol)
+		clients.append(client)
 
-    # Connect!
-    try:
-        transport.open()
-    except TTransport.TTransportException:
-        my_print("Could not connect to thrift client on port {}\n".format(
-            thrift_port))
-        my_print("Make sure the switch is running ")
-        my_print("and that you have the right port\n")
-        sys.exit(1)
+	# Connect!
+	try:
+		transport.open()
+	except TTransport.TTransportException:
+		my_print("Could not connect to thrift client on port {}\n".format(
+			thrift_port))
+		my_print("Make sure the switch is running ")
+		my_print("and that you have the right port\n")
+		sys.exit(1)
 
-    return clients
+	return clients
 
 
 def thrift_connect_standard(thrift_ip, thrift_port, out=sys.stdout):
-    from bm_runtime.standard import Standard
-    return thrift_connect(thrift_ip, thrift_port,
-                          [("standard", Standard.Client)], out)[0]
+	from bm_runtime.standard import Standard
+	return thrift_connect(thrift_ip, thrift_port,
+						  [("standard", Standard.Client)], out)[0]
