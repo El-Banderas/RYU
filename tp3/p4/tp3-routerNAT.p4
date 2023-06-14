@@ -77,6 +77,7 @@ header tcp_t {
 struct metadata {
     ip4Addr_t   next_hop_ipv4;
     bit<16>     tcp_length;
+    tcpPort_t   tcp_src_port;
 }
 /* all the headers previously defined */
 struct headers {
@@ -145,13 +146,13 @@ control MyIngress(inout headers hdr,
     }
 
     // bit<16> srcPort;
-    action rewrite_dst_ip ( ip4Addr_t nat_dst, tcpPort_t nat_port ) {
+    action rewrite_dst_ip ( ip4Addr_t nat_dst) {
         hdr.ipv4.dstAddr = nat_dst;
-        hdr.tcp.dstPort = nat_port;
+        hdr.tcp.dstPort = hdr.tcp.dstPort - meta.tcp_src_port ;
     }
     
     table dnat {
-        key = { hdr.ipv4.srcAddr : exact; hdr.tcp.dstPort : exact;}
+        key = { hdr.ipv4.srcAddr : exact; meta.tcp_src_port : exact;}
         actions = {
             rewrite_dst_ip ;
             drop;
@@ -162,13 +163,13 @@ control MyIngress(inout headers hdr,
 
     // bit<16> srcPort;
     action rewrite_src_ip ( ip4Addr_t nat_src, tcpPort_t nat_port ) {
-        hdr.ipv4.srcAddr = nat_src;
-        hdr.tcp.srcPort = nat_port;
+        hdr.ipv4.srcAddr = nat_src ;
+        hdr.tcp.srcPort =  hdr.tcp.srcPort + nat_port;
         //hdr.ipv4.ttl = 2;
     }
     
     table snat {
-        key = { hdr.ipv4.srcAddr : exact; hdr.tcp.srcPort : exact;}
+        key = { hdr.ipv4.srcAddr : exact; }
         actions = {
             rewrite_src_ip ;
             drop;
@@ -234,6 +235,15 @@ control MyIngress(inout headers hdr,
         * switch must apply the tables. 
         */
         if (hdr.ipv4.isValid()) {
+            if (hdr.tcp.dstPort > 6000 && hdr.tcp.dstPort < 7000){
+                meta.tcp_src_port = 1000;
+            }
+            if (hdr.tcp.dstPort > 7000 && hdr.tcp.dstPort < 8000){
+                meta.tcp_src_port = 2000;
+            }
+            if (hdr.tcp.dstPort > 8000 && hdr.tcp.dstPort < 9000){
+                meta.tcp_src_port = 3000;
+            }
             snat.apply();
             dnat.apply();
             ipv4_lpm.apply();
