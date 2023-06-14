@@ -3,9 +3,6 @@
 #include <v1model.p4>
 
 const bit<16> TYPE_IPV4 = 0x800;
-const bit<8> TYPE_TCP  = 0x06;
-const bit<8> TYPE_UDP  = 0x11;
-const bit<8> TYPE_ICMP  = 0x01;
 
 typedef bit<9>  egressSpec_t;
 typedef bit<48> macAddr_t;
@@ -32,27 +29,6 @@ header ipv4_t {
     ip4Addr_t dstAddr;
 }
 
-header tcp_t {
-    bit<16> srcPort;
-    bit<16> dstPort;
-    bit<32> seqNo;
-    bit<32> ackNo;
-    bit<4>  dataOffset; // how long the TCP header is
-    bit<3>  res;
-    bit<3>  ecn;        // Explicit congestion notification
-    bit<6>  ctrl;       // URG,ACK,PSH,RST,SYN,FIN
-    bit<16> window;
-    bit<16> checksum;
-    bit<16> urgentPtr;
-}
-
-header udp_t {
-	bit<16> srcPort;
-	bit<16> dstPort;
-	bit<16> length;
-	bit<16> csum;
-}
-
 struct metadata {
     ip4Addr_t   next_hop_ipv4;
 }
@@ -60,8 +36,6 @@ struct metadata {
 struct headers {
     ethernet_t   ethernet;
     ipv4_t       ipv4;
-    tcp_t        tcp;
-	udp_t        udp;
 }
 
 parser MyParser(packet_in packet,
@@ -82,26 +56,8 @@ parser MyParser(packet_in packet,
 
     state parse_ipv4 {
         packet.extract(hdr.ipv4);
-		transition select(hdr.ipv4.protocol) {
-			TYPE_TCP: parse_tcp;
-			TYPE_UDP: parse_udp;
-			TYPE_ICMP: parse_icmp;
-		}
+		transition accept;
     }
-
-    state parse_tcp {
-		packet.extract(hdr.tcp);
-		transition accept;
-	}
-
-	state parse_udp {
-		packet.extract(hdr.udp);
-		transition accept;
-	}
-	
-    state parse_icmp {
-		transition accept;
-	}
 }
 
 control MyVerifyChecksum(inout headers hdr, inout metadata meta) {   
@@ -113,22 +69,6 @@ control MyIngress(inout headers hdr,
                   inout standard_metadata_t standard_metadata) {
     action drop() {
         mark_to_drop(standard_metadata);
-    }
-
-   // Rewrite src add
-    action snat_translate(ip4Addr_t nat_ip_src, bit<16> src_port) {
-        hdr.ipv4.srcAddr  = nat_ip_src;
-        hdr.tcp.srcPort  = src_port;
-    }
-    
-    table snat {
-        key = { hdr.ipv4.srcAddr  : exact; hdr.ipv4.dstAddr  : exact; hdr.tcp.srcPort : exact;hdr.tcp.dstPort : exact;}
-        actions = {
-            snat_translate;
-            drop;
-            NoAction;
-        }
-        default_action = NoAction();
     }
 
     // Find next hop
@@ -179,11 +119,9 @@ control MyIngress(inout headers hdr,
 
     apply {
         if (hdr.ipv4.isValid()) {
-            snat.apply();
             ipv4_lpm.apply();
             src_mac.apply();
             dst_mac.apply();
-            //src_rw.apply();
         }
     }
 }
@@ -219,8 +157,6 @@ control MyDeparser(packet_out packet, in headers hdr) {
     apply {
         packet.emit(hdr.ethernet);
         packet.emit(hdr.ipv4);
-        packet.emit(hdr.udp);
-        packet.emit(hdr.tcp);
     }
 }
 
