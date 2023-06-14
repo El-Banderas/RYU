@@ -12,43 +12,43 @@ typedef bit<32> ip4Addr_t;
 typedef bit<16> tcpPort_t;
 
 header ethernet_t {
-    macAddr_t dstAddr;
-    macAddr_t srcAddr;
-    bit<16>   etherType;
+	macAddr_t dstAddr;
+	macAddr_t srcAddr;
+	bit<16>   etherType;
 }
 
 header ipv4_t {
-    bit<4>    version;
-    bit<4>    ihl;
-    bit<8>    diffserv;
-    bit<16>   totalLen;
-    bit<16>   identification;
-    bit<3>    flags;
-    bit<13>   fragOffset;
-    bit<8>    ttl;
-    bit<8>    protocol;
-    bit<16>   hdrChecksum;
-    ip4Addr_t srcAddr;
-    ip4Addr_t dstAddr;
+	bit<4>    version;
+	bit<4>    ihl;
+	bit<8>    diffserv;
+	bit<16>   totalLen;
+	bit<16>   identification;
+	bit<3>    flags;
+	bit<13>   fragOffset;
+	bit<8>    ttl;
+	bit<8>    protocol;
+	bit<16>   hdrChecksum;
+	ip4Addr_t srcAddr;
+	ip4Addr_t dstAddr;
 }
 
 header tcp_t {
-    tcpPort_t srcPort;
-    tcpPort_t dstPort;
-    bit<32>   seqNo;
-    bit<32>   ackNo;
-    bit<4>    dataOffset; // how long the TCP header is
-    bit<3>    res;
-    bit<3>    ecn;        // Explicit congestion notification
-    bit<6>    ctrl;       // URG,ACK,PSH,RST,SYN,FIN
-    bit<16>   window;
-    bit<16>   checksum;
-    bit<16>   urgentPtr;
+	tcpPort_t srcPort;
+	tcpPort_t dstPort;
+	bit<32>   seqNo;
+	bit<32>   ackNo;
+	bit<4>    dataOffset; // how long the TCP header is
+	bit<3>    res;
+	bit<3>    ecn;        // Explicit congestion notification
+	bit<6>    ctrl;       // URG,ACK,PSH,RST,SYN,FIN
+	bit<16>   window;
+	bit<16>   checksum;
+	bit<16>   urgentPtr;
 }
 
 struct metadata {
-    ip4Addr_t  next_hop_ipv4; // for routing
-    bit<16>    tcp_length;    // for checksum
+	ip4Addr_t  next_hop_ipv4; // for routing
+	bit<16>    tcp_length;    // for checksum
 }
 
 struct headers {
@@ -62,23 +62,23 @@ struct headers {
 *************************************************************************/
 
 parser MyParser(packet_in packet,
-                out headers hdr,
-                inout metadata meta,
-                inout standard_metadata_t standard_metadata) {
-    state start {
-        transition parse_ethernet;
-    }
+				out headers hdr,
+				inout metadata meta,
+				inout standard_metadata_t standard_metadata) {
+	state start {
+		transition parse_ethernet;
+	}
 
-    state parse_ethernet {
-        packet.extract(hdr.ethernet);
-        transition select(hdr.ethernet.etherType) {
-            TYPE_IPV4:  parse_ipv4;
-            default: accept;
-        }
-    }
-    state parse_ipv4 {
+	state parse_ethernet {
+		packet.extract(hdr.ethernet);
+		transition select(hdr.ethernet.etherType) {
+			TYPE_IPV4:  parse_ipv4;
+			default: accept;
+		}
+	}
+	state parse_ipv4 {
 		packet.extract(hdr.ipv4);
-        meta.tcp_length = hdr.ipv4.totalLen - 20;
+		meta.tcp_length = hdr.ipv4.totalLen - 20;
 		transition select(hdr.ipv4.protocol) {
 			TYPE_TCP: parse_tcp;
 		}
@@ -95,7 +95,7 @@ parser MyParser(packet_in packet,
 *************************************************************************/
 
 control MyVerifyChecksum(inout headers hdr, inout metadata meta) {   
-    apply { /* do nothing */  }
+	apply { /* do nothing */  }
 }
 
 
@@ -104,112 +104,118 @@ control MyVerifyChecksum(inout headers hdr, inout metadata meta) {
 *************************************************************************/
 
 control MyIngress(inout headers hdr,
-                  inout metadata meta,
-                  inout standard_metadata_t standard_metadata) {
-    action drop() {
-        mark_to_drop(standard_metadata);
-    }
+				  inout metadata meta,
+				  inout standard_metadata_t standard_metadata) {
+	action drop() {
+		mark_to_drop(standard_metadata);
+	}
 	
 	// NoAction is defined in v1model - does nothing
 
 
 	/* NAT... */
 
-    action snat_translate(ip4Addr_t nat_src, tcpPort_t nat_port) {
-        hdr.ipv4.srcAddr = nat_src;
-        hdr.tcp.srcPort = nat_port;
-    }
-    
-    table snat {
-        key = { hdr.ipv4.srcAddr : exact; hdr.tcp.srcPort : exact;}
-        actions = {
-            snat_translate;
-            NoAction;
-            drop;
-        }
-        default_action = NoAction();
-    }
+	action snat_translate(ip4Addr_t nat_src, tcpPort_t nat_port) {
+		hdr.ipv4.srcAddr = nat_src;
+		hdr.tcp.srcPort = nat_port;
+	}
+	
+	table snat {
+		key = {
+			hdr.ipv4.srcAddr : exact;
+			hdr.tcp.srcPort : exact;
+		}
+		actions = {
+			snat_translate;
+			NoAction;
+			drop;
+		}
+		default_action = NoAction();
+	}
 
-    action dnat_translate(ip4Addr_t nat_dst, tcpPort_t nat_port) {
-        hdr.ipv4.dstAddr = nat_dst;
-        hdr.tcp.dstPort = nat_port;
-    }
-    
-    table dnat {
-        key = { hdr.ipv4.srcAddr : exact; hdr.tcp.dstPort : exact;}
-        actions = {
-            dnat_translate;
-            NoAction;
-            drop;
-        }
-        default_action = NoAction();
-    }
+	action dnat_translate(ip4Addr_t nat_dst, tcpPort_t nat_port) {
+		hdr.ipv4.dstAddr = nat_dst;
+		hdr.tcp.dstPort = nat_port;
+	}
+	
+	table dnat {
+		key = {
+			hdr.ipv4.srcAddr : exact;
+			hdr.tcp.dstPort : exact;
+		}
+		actions = {
+			dnat_translate;
+			NoAction;
+			drop;
+		}
+		default_action = NoAction();
+	}
 
 
 	/* Normal routing stuff... */
-    
-    // Find next hop
-    action ipv4_fwd(ip4Addr_t nxt_hop, egressSpec_t port) {
-        meta.next_hop_ipv4 = nxt_hop;
-        standard_metadata.egress_spec = port;
-        hdr.ipv4.ttl = hdr.ipv4.ttl - 1;
-    }
-    
-    table ipv4_lpm {
-        key = { hdr.ipv4.dstAddr : lpm; }
-        actions = {
-            ipv4_fwd;
-            drop;
-            NoAction;
-        }
-        default_action = drop;
-    }
+	
+	// Find next hop
+	action ipv4_fwd(ip4Addr_t nxt_hop, egressSpec_t port) {
+		meta.next_hop_ipv4 = nxt_hop;
+		standard_metadata.egress_spec = port;
+		hdr.ipv4.ttl = hdr.ipv4.ttl - 1;
+	}
+	
+	table ipv4_lpm {
+		key = { hdr.ipv4.dstAddr : lpm; }
+		actions = {
+			ipv4_fwd;
+			drop;
+			NoAction;
+		}
+		default_action = drop;
+	}
 
-    // Alterar src MAC
-    action rewrite_src_mac(macAddr_t src_mac) {
-        hdr.ethernet.srcAddr = src_mac;
-    }
+	// Alterar src MAC
+	action rewrite_src_mac(macAddr_t src_mac) {
+		hdr.ethernet.srcAddr = src_mac;
+	}
 
-    table src_mac {
-        key = { standard_metadata.egress_spec : exact; }
-        actions = {
-            rewrite_src_mac;
-            drop;
-        }
-        default_action = drop;
-    }
+	table src_mac {
+		key = { standard_metadata.egress_spec : exact; }
+		actions = {
+			rewrite_src_mac;
+			drop;
+		}
+		default_action = drop;
+	}
 
-    // Alterar MAC destino    
-    action rewrite_dst_mac(macAddr_t dst_mac) {
-        hdr.ethernet.dstAddr = dst_mac;
-    }
+	// Alterar MAC destino    
+	action rewrite_dst_mac(macAddr_t dst_mac) {
+		hdr.ethernet.dstAddr = dst_mac;
+	}
 
-    // Vai buscar o IP guardado no meta (do utilizador)
-    table dst_mac {
-        key = { meta.next_hop_ipv4 : exact; }
-        actions = {
-            rewrite_dst_mac;
-            drop;
-        }
-        default_action = drop;
-    }
+	// Vai buscar o IP guardado no meta (do utilizador)
+	table dst_mac {
+		key = { meta.next_hop_ipv4 : exact; }
+		actions = {
+			rewrite_dst_mac;
+			drop;
+		}
+		default_action = drop;
+	}
 
 
 	/* Apply tables... */
 
-    apply {
-        if (hdr.ipv4.isValid()) {
+	apply {
+		if (hdr.ipv4.isValid()) {
 
 			// NAT first
-            snat.apply();
-            dnat.apply();
+			snat.apply();
+			dnat.apply();
 
 			// Then routing
-            ipv4_lpm.apply();
-            src_mac.apply();
-            dst_mac.apply();
-        }
-    }
+			ipv4_lpm.apply();
+			src_mac.apply();
+			dst_mac.apply();
+		}
+	}
 }
 
 /*************************************************************************
@@ -217,9 +223,9 @@ control MyIngress(inout headers hdr,
 *************************************************************************/
 
 control MyEgress(inout headers hdr,
-                 inout metadata meta,
-                 inout standard_metadata_t standard_metadata) {
-    apply { /* do nothing */ }
+				 inout metadata meta,
+				 inout standard_metadata_t standard_metadata) {
+	apply { /* do nothing */ }
 }
 
 /*************************************************************************
@@ -227,8 +233,8 @@ control MyEgress(inout headers hdr,
 *************************************************************************/
 
 control MyComputeChecksum(inout headers  hdr, inout metadata meta) {
-    /* this recalculates the checksum */
-    apply {
+	/* this recalculates the checksum */
+	apply {
 		update_checksum(
 			hdr.ipv4.isValid(),
 					{
@@ -270,7 +276,7 @@ control MyComputeChecksum(inout headers  hdr, inout metadata meta) {
 			hdr.tcp.checksum,
 			HashAlgorithm.csum16
 		);
-    }
+	}
 }
 
 /*************************************************************************
@@ -278,11 +284,11 @@ control MyComputeChecksum(inout headers  hdr, inout metadata meta) {
 *************************************************************************/
 
 control MyDeparser(packet_out packet, in headers hdr) {
-    apply {
-        packet.emit(hdr.ethernet);
-        packet.emit(hdr.ipv4);
-        packet.emit(hdr.tcp);
-    }
+	apply {
+		packet.emit(hdr.ethernet);
+		packet.emit(hdr.ipv4);
+		packet.emit(hdr.tcp);
+	}
 }
 
 /*************************************************************************
