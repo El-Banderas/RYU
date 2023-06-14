@@ -2,11 +2,12 @@ reset_state
 table_set_default ipv4_lpm drop
 table_set_default src_mac drop
 table_set_default dst_mac drop
-table_set_default src_rw  drop
-table_add ipv4_lpm ipv4_fwd 10.0.1.100/32 => 10.0.1.100 1
-table_add ipv4_lpm ipv4_fwd 10.0.2.100/32 => 10.0.2.100 2
-table_add ipv4_lpm ipv4_fwd 10.0.3.100/32 => 10.0.3.100 3
-table_add ipv4_lpm ipv4_fwd 192.168.1.10/32 => 192.168.1.10 4
+table_set_default snat drop
+table_set_default dnat NoAction
+table_add ipv4_lpm ipv4_fwd 10.0.1.100/32 => 10.0.1.100 1 
+table_add ipv4_lpm ipv4_fwd 10.0.2.100/32 => 10.0.2.100 2 
+table_add ipv4_lpm ipv4_fwd 10.0.3.100/32 => 10.0.3.100 3 
+table_add ipv4_lpm ipv4_fwd 192.168.1.10/32 => 192.168.1.10 4 
 table_add src_mac rewrite_src_mac 1 => 00:aa:bb:00:00:01
 table_add src_mac rewrite_src_mac 2 => 00:aa:bb:00:00:02
 table_add src_mac rewrite_src_mac 3 => 00:aa:bb:00:00:03
@@ -15,3 +16,10 @@ table_add dst_mac rewrite_dst_mac 10.0.1.100 => 00:04:00:00:00:01
 table_add dst_mac rewrite_dst_mac 10.0.2.100 => 00:04:00:00:00:02
 table_add dst_mac rewrite_dst_mac 10.0.3.100 => 00:04:00:00:00:03
 table_add dst_mac rewrite_dst_mac 192.168.1.10 => 00:04:00:00:00:04
+table_add snat rewrite_src_ip 10.0.1.100 5100 => 172.16.1.1 5001
+table_add snat rewrite_src_ip 10.0.2.100 5100 => 172.16.1.1 5002
+table_add snat rewrite_src_ip 10.0.3.100 5100 => 172.16.1.1 5003
+table_add snat rewrite_src_ip 192.168.1.10 9000 => 192.168.1.10 9000
+table_add dnat rewrite_dst_ip 192.168.1.10 5001 => 10.0.1.100 5100
+table_add dnat rewrite_dst_ip 192.168.1.10 5002 => 10.0.2.100 5100
+table_add dnat rewrite_dst_ip 192.168.1.10 5003 => 10.0.3.100 5100

@@ -1,0 +1,1000 @@
+    7  cd RYU
+    8  ryu-manager self-learning-l2-switch.py 
+    9  sudo wireshark
+   10  cd RYU/
+   11  ls
+   12  git pull
+   13  code .
+   14  git stash
+   15  git status
+   16  git pull
+   17  git status
+   18  sudo mn --custom topo.py --topo mytopo --controller=remote
+   19  sudo mn --custom topo.py --topo Topo_1_1 --controller=remote
+   20  sudo mn --custom topo.py --topo 1_1 --controller=remote
+   21  sudo mn --custom ~/topo.py --topo 1-2 --controller=remote --switch=ovsk --protocols=OpenFlow13 --mac
+   22  sudo mn --custom topo.py --topo 1-2 --controller=remote --switch=ovsk --protocols=OpenFlow13 --mac
+   23  sudo mn --custom ./topo.py --topo 1-2 --controller=remote --switch=ovsk --protocols=OpenFlow13 --mac
+   24  sudo mn --custom ./topo.py --topo 1-2 --controller=remote 
+   25  sudo mn --custom ./topo.py --topo 1-1 --controller=remote 
+   26  sudo mn --custom ./topo.py --topo 1-1 --controller=remote --mac
+   27  sudo mn --custom ./topo.py --topo 1-2 --controller=remote 
+   28  git pull
+   29  cat ../ryu_git_pass 
+   30  git config --global credential.helper store
+   31  git pull
+   32  sudo mn --custom ./topo.py --topo 1-2 --controller=remote 
+   33  sudo mn --custom ./topo.py --topo 1-2 --controller=remote pingall
+   34  sudo mn --custom ./topo.py --topo 1-2 --controller=remote --test=pingall
+   35  sudo mn --custom ./topo.py --topo 1-2 --controller=remote --test=pingall --mac
+   36  sudo mn --custom ./topo.py --topo 1-2 --controller=remote --mac
+   37  sudo mn --custom ./topo.py --topo 1-2 --controller=remote --test=pingall --mac
+   38  sudo mn --custom ./topo.py --topo 1-2 --controller=remote 
+   39  git status
+   40  git add self-learning-topology.py 
+   41  git commit -m "ip's"
+   42  git config --global user.name "El-Banderas"
+   43  git commit -m "ip's"
+   44  sudo wireshark 
+   45  cd RYU/
+   46  code .
+   47  ryu-manager self-learning-l2-switch.py self-learning-l2-switch.py 
+   48  git status
+   49  ryu-manager self-learning-l2-switch.py self-learning-l2-switch.py 
+   50  git pull
+   51  git status
+   52  git restore self-learning-topology.py 
+   53  git pull
+   54  ryu-manager self-learning-l2-switch.py self-learning-l2-switch.py 
+   55  ryu-manager self-learning-l2-switch.py self-learning-l2-switch.py git pull
+   56  git pull
+   57  ryu-manager self-learning-l2-switch.py self-learning-l2-switch.py git pull
+   58  ryu-manager self-learning-l2-switch.py self-learning-l2-switch.py 
+   59  ryu-manager self-learning-l2-switch.py self-l-learning-topology.py 
+   60  ryu-manager self-learning-l2-switch.py self-learning-topology.py 
+   61  ping 10.0.0.1
+   62  cd RYU/
+   63  ls
+   64  code .
+   65  ryu-manager self-learning-l2-switch.py self-learning-topology.py 
+   66  git status
+   67  git add self-learning-topology.py 
+   68  git commit -m "dicionario ips macs bom?"
+   69  git config --global user.name "El-Banderas"
+   70  git commit -m "dicionario ips macs bom?"
+   71  git config --global credential.helper store
+   72  git pull
+   73  git commit -m "dicionario ips macs bom?"
+   74  git config --global credential.helper cache
+   75  git commit -m "dicionario ips macs bom?"
+   76  git config user.name "El-Banderas"
+   77  git commit -m "dicionario ips macs bom?"
+   78  git config --global user.email "diogobpires@gmail.com"
+   79   git config --global user.name "El-Banderas"
+   80  git commit -m "dicionario ips macs bom?"
+   81  git push
+   82  cat ../ryu_git_pass 
+   83  git push
+   84  git pull
+   85  git config pull.rebase false
+   86  git pull
+   87  ryu-manager self-learning-l2-switch.py self-learning-topology.py 
+   88  git status
+   89  git add self-learning-topology.py 
+   90  git commit -m "merge mal feito"
+   91  git push
+   92  sudo mn --custom ./topo.py --topo 1-2 --controller=remote --test=pingall --mac
+   93  sudo mn --custom ./topo.py --topo 1-2 --controller=remote --mac
+   94  sudo mn --custom ./topo.py --topo 1-2 --controller=remote --test=pingall --mac
+   95  sudo mn -c
+   96  sudo mn --custom ./topo.py --topo 1-2 --controller=remote --test=pingall --mac
+   97  sudo mn -c
+   98  sudo mn --custom ./topo.py --topo 1-2 --controller=remote --test=pingall --mac
+   99  sudo mn --custom ./topo.py --topo 1-2 --controller=remote  --mac
+  100  sudo mn --custom ./topo.py --topo 1-2 --controller=remote --test=pingall --mac
+  101  sudo mn --custom ./topo.py --topo 1-2 --controller=remote --mac
+  102  cd RYU
+  103  git pull
+  104  cat ../ryu_git_pass 
+  105  git pull
+  106  git config --global credential.helper store
+  107  code .
+  108  ryu-manager self-learning-l2-switch.py self-learning-topology.py 
+  109  sudo mn --custom ./topo.py --topo 1-2 --controller=remote --mac --test=pingall
+  110  sudo mn --custom ./topo.py --topo 1-2 --controller=remote --test=pingall --mac
+  111  sudo mn --custom ./topo.py --topo 1-2 --controller=remote --mac
+  112  cd RYU
+  113  git pull
+  114  code .
+  115  git status
+  116  git add self-learning-topology2.py 
+  117  git commit -m "exporta yaml com demasiadas cenas"
+  118  git push
+  119  git pull
+  120  cp self-learning-* ..
+  121  git restore self-learning-topology.py 
+  122  git pull
+  123  git push
+  124  snmpwalk localhost system
+  125  cd RYU/
+  126  git pull
+  127  code .
+  128  cd RYU/
+  129  code .
+  130  cd RYU/
+  131  ls
+  132  code .
+  133  git pull
+  134  cd RYU
+  135  ls
+  136  mkdir tp1
+  137  cp *.py tp1/
+  138  ls
+  139  ls tp1/
+  140  rm *.py
+  141  ls
+  142  mv RDS_TP1_Grupo3.pdf tp1/
+  143  mkdir tp2
+  144  git status
+  145  git add RYU_diagramTP1.drawio *.py
+  146  git status
+  147  git add *.pcapng comando_dump_flows 
+  148  git status
+  149  git add tp1/*
+  150  git status
+  151  git commit -m "organize stuff"
+  152  git push
+  153  ls
+  154  cd tp2/
+  155  ls
+  156  cd ..
+  157  code .
+  158  sudo mn --custom ~/topo.py --topo 1-1 --controller=remote
+  159  --switch=ovsk --protocols=OpenFlow13 --mac
+  160  sudo mn --custom ~/topo.py --topo 1-1 --controller=remote --switch=ovsk --protocols=OpenFlow13
+  161  cd tp2/
+  162  sudo mn --custom ~/topo.py --topo 1-1 --controller=remote --switch=ovsk --protocols=OpenFlow13
+  163  sudo mn -c
+  164  sudo mn --custom ~/topo.py --topo 1-1 --controller=remote --switch=ovsk --protocols=OpenFlow13 
+  165  ls
+  166  sudo mn --custom ./topo.py --topo 1-1 --controller=remote --switch=ovsk --protocols=OpenFlow13 
+  167  history 1000 | grep "sudo mn"
+  168  sudo mn --custom ./topo.py --topo 1-1 --controller=remote 
+  169  cd RYU
+  170  git status
+  171  cd tp2/
+  172  ls
+  173  cd ..
+  174  git add tp2/
+  175  git commit -m "topologia"
+  176  git push
+  177  sudo curl -L https://yt-dl.org/downloads/latest/youtube-dl -o /usr/local/bin/youtube-dl
+  178  sudo chmod a+rx /usr/local/bin/youtube-dl
+  179  youtube-dl https://www.youtube.com/watch?v=pOgfi0joMEM
+  180  youtube-dl -
+  181  youtube-dl https://www.youtube.com/watch?v=pOgfi0joMEM --verbose
+  182  youtube-dl https://www.youtube.com/watch?v=pOgfi0joMEM -R 3
+  183  youtube-dl -R 3 https://www.youtube.com/watch?v=pOgfi0joMEM
+  184  youtube-dl 'https://www.youtube.com/watch?t=4&v=BaW_jenozKc'
+  185  youtube-dl https://www.youtube.com/watch?t=4\&v=BaW_jenozKc
+  186  youtube-dl https://www.france.tv/france-2/envoye-special/4774051-49-3-l-article-de-la-colere.html
+  187  youtube-dl https://www.youtube.com/watch?v=eX_fkB1st9M
+  188  > yt-dlp --no-config -v --get-title E8hyodMhbRw
+  189  code /usr/local/bin/youtube-dl 
+  190  git pull
+  191  sudo mn --custom ~/topo.py --topo 1-1 --controller=remote 
+  192  sudo mn --custom ./topo.py --topo 1-1 --controller=remote 
+  193  sudo mn --custom topo.py --topo 1-1 --controller=remote 
+  194  sudo mn -c
+  195  cd tp3
+  196  cd tp2
+  197  sudo mn --custom topo.py --topo 1-1 --controller=remote 
+  198  sudo mn --custom topo_.py --topo 1-1 --controller=remote 
+  199  sudo mn --custom topo_.py  --controller=remote 
+  200  sudo mn --custom topo_.py --topo TP2 --controller=remote 
+  201  sudo mn --custom topo_.py --topo  --controller=remote 
+  202  sudo python2.7 -E topo.py
+  203  sudo python -E topo.py
+  204  sudo python2.7 -E topo.py
+  205  sudo mn --custom ~/topo.py --topo 1-1 --controller=remote 
+  206  sudo mn --custom topo_alterada.py.py --topo 1-1 --controller=remote 
+  207  sudo mn --custom topo_alterada.py --topo 1-1 --controller=remote 
+  208  git status
+  209  git add *.py
+  210  git commit -m "topologia um bocado má"
+  211  git push
+  212  sudo mn --custom topo_alterada.py --topo 1-1 --controller=remote 
+  213  sudo mn -c
+  214  sudo mn --custom topo_alterada.py --topo 1-1 --controller=remote 
+  215  sudo mn -c
+  216  sudo mn --custom topo_alterada.py --topo 1-1 --controller=remote 
+  217  sudo mn -c
+  218  sudo mn --custom topo_alterada.py --topo 1-1 --controller=remote 
+  219  git status
+  220  git add topo_alterada.py 
+  221  git commit -m "já dá para começar"
+  222  git push
+  223  sudo mn --custom topo_alterada.py --topo 1-1 --controller=remote 
+  224  sudo mn -c
+  225  git status
+  226  git add *.py
+  227  git commit -m "dicionário portas"
+  228  git push
+  229  git pull
+  230  sudo mn --custom topo_alterada.py --topo 1-1 --controller=remote 
+  231  sudo mn -c
+  232  sudo mn --custom topo_alterada.py --topo 1-1 --controller=remote 
+  233  sudo mn -c
+  234  sudo mn --custom topo_alterada.py --topo 1-1 --controller=remote 
+  235  ls
+  236  cd ryu/
+  237  git pull
+  238  ls
+  239  code .
+  240  cd ..
+  241  ls
+  242  cd RYU
+  243  code .
+  244  cd tp2
+  245  ryu-manager LoadBalancer.py --ofp-tcp-listen-port 6634
+  246  clear
+  247  ryu-manager LoadBalancer.py --ofp-tcp-listen-port 6634
+  248  ryu-manager switchVLAN.py --ofp-tcp-listen-port 6633
+  249  cd tp2/
+  250  ryu-manager switchVLAN.py --ofp-tcp-listen-port 6633
+  251  ryu-manager switchVLAN.py --ofp-tcp-listen-port 6653
+  252  clear
+  253  ryu-manager switchVLAN.py --ofp-tcp-listen-port 6653
+  254  ryu-manager switchVLAN2.py --ofp-tcp-listen-port 6653
+  255  cd ../..
+  256  ls
+  257  code ryu
+  258  sudo wireshark
+  259  sudo mn --custom topo.py --topo 1-1 --controller=remote 
+  260  git pull
+  261  sudo mn --custom topo.py --topo 1-1 --controller=remote 
+  262  sudo mn --custom topo_alterada.py --topo 1-1 --controller=remote 
+  263  wget https://github.com/VarunDelft/SDN-RYU-VLAN/blob/449c4d76fc8933041341419e3d5f696e446e7938/VLAN_8021Q.py
+  264  ls
+  265  github clone https://github.com/VarunDelft/SDN-RYU-VLAN/tree/449c4d76fc8933041341419e3d5f696e446e7938
+  266  git clone https://github.com/VarunDelft/SDN-RYU-VLAN/tree/449c4d76fc8933041341419e3d5f696e446e7938
+  267  git clone https://github.com/VarunDelft/SDN-RYU-VLAN
+  268  sudo mn --custom topo.py --topo 1-1 --controller=remote 
+  269  sudo mn --custom topo_alterada.py --topo 1-1 --controller=remote 
+  270  git status
+  271  git add switchVLAN2.py 
+  272  git commit -m "funcionagit add switchVLAN2.py git add switchVLAN2.py git add switchVLAN2.py git add switchVLAN2.py git add switchVLAN2.py ! sim, estou feliz"
+  273  git push
+  274  sudo mn --custom topo_alterada.py --topo 1-1 --controller=remote 
+  275  ryu-manager ../tp1/self-learning-l2-switch.py --ofp-tcp-listen-port 6653
+  276  ryu-manager switchVLAN2.py --ofp-tcp-listen-port 6653
+  277  clear
+  278  ryu-manager switchVLAN2.py --ofp-tcp-listen-port 6653
+  279  ryu-mana   --ofp-tcp-listen-port 6653
+  280  ryu-manager VLAN_8021Q.py --ofp-tcp-listen-port 6653
+  281  git status
+  282  git add switchVLAN2.py 
+  283  git commit -m "prints"
+  284  git push
+  285  ryu-manager switchVLAN2.py --ofp-tcp-listen-port 6653
+  286  ryu-manager . --ofp-tcp-listen-port 6653
+  287  ryu-manager switchVLAN2.py --ofp-tcp-listen-port 6653
+  288  cd RYU/
+  289  ls
+  290  cd tp2
+  291  code
+  292  ryu-manager ~/LoadBalancer.py --ofp-tcp-listen-port 6634
+  293  ryu-manager LoadBalancer.py --ofp-tcp-listen-port 6634
+  294  cd RYU/
+  295  ls
+  296  cd tp2/
+  297  ryu-manager LoadBalancer.py --ofp-tcp-listen-port 6634
+  298  sudo wireshark 
+  299  ryu-manager LoadBalancer.py 
+  300  ryu-manager LoadBalancer.py --ofp-tcp-listen-port 6634
+  301  sudo mn --custom topo_alterada.py --topo 1-1 --controller=remote 
+  302  cd RYU/tp2/
+  303  git pull
+  304  code .
+  305  ryu-manager switchVLAN2.py --ofp-tcp-listen-port 6634
+  306  ryu-manager switchVLAN2.py --ofp-tcp-listen-port 6633
+  307  ryu-manager switchVLAN2.py --ofp-tcp-listen-port 6653
+  308  sudo wireshark 
+  309  pip install pyshark
+  310  python3
+  311  sudo wireshark
+  312  sudo python3
+  313  sudo pip install pyshark
+  314  sudo python3
+  315  git clone https://github.com/ritagomes187/QOS_TP3.git
+  316  ls
+  317  cd QOS_TP3/
+  318  ls
+  319  git pull
+  320  code .
+  321  python3 catch_ips.py 
+  322  sudo python3 catch_ips.py 
+  323  ~
+  324  sudo python3 catch_ips.py 
+  325  sudo wire
+  326  sudo wireshark 
+  327  sudo python3 catch_ips.py 
+  328  git status
+  329  git add catch_ips.py 
+  330  git commit -m "apanha nomes e ips"
+  331  git push
+  332  sudo wire
+  333  sudo wireshark 
+  334  sudo dnf upgrade
+  335  cd QOS_TP3/
+  336  ls
+  337  code .
+  338  ls
+  339  sudo python3 catch_ips.py 
+  340  git status
+  341  git add catch_ips.py 
+  342  git commit -m "print de banwiths má"
+  343  git push
+  344  git add catch_ips.py 
+  345  git commit -m "esqueci-me de tirar uma print"
+  346  git push
+  347  sudo python3 catch_ips.py 
+  348  cd QOS_TP3/
+  349  ls
+  350  git pull
+  351  sudo python3 app.py 
+  352  pip install tkinter
+  353  sudo dnf install python3-tkinter
+  354  sudo python3 app.py 
+  355  code .
+  356  sudo python3 catch_ips.py 
+  357  pip install geopy
+  358  sudo python3 catch_ips.py 
+  359  sudo pip install geopy
+  360  sudo python3 catch_ips.py 
+  361  sudo pip install matplotlib
+  362  sudo python3 catch_ips
+  363  sudo python3 catch_ips.py 
+  364  brew install geos
+  365  sudo dnf install geos
+  366  pip3 install https://github.com/matplotlib/basemap/archive/master.zip
+  367  sudo pip3 install https://github.com/matplotlib/basemap/archive/master.zip
+  368  sudo pip3 install matplotlib.pyplot
+  369  sudo pip install matplotlib.pyplot
+  370  sudo pip install matplotlib
+  371  sudo python3 catch_ips.py 
+  372  sudo dnf install libgeos-3.5.0
+  373  sudo dnf install libgeos
+  374  sudo python3 useDNS_to_cap.py 
+  375  cd tes
+  376  cd tests/
+  377  sudo python3 useDNS_to_cap.py 
+  378  nslookup
+  379  nslookup 2001:4860:4802:38::a
+  380  nslookup 216.58.215.174
+  381  nslookup 2001:818:e7e7:9300:314:deed:baa3:a19
+  382  nslookup 2a00:1450:4003:806::200e
+  383  nslookup fe80::1
+  384  nslookup fe80::3a65:4b76:5411:640
+  385  fe80::3a65:4b76:5411:640 34.120.208.123
+  386  nslookup 8.8.8.8
+  387  8.8.8.8 34.120.208.123
+  388  nslookup 8.8.8.8
+  389  nslookup 8.8.8.80 34.120.208.123
+  390  nslookup 8.8.8.80 34.120.208.1230 8.8.8.8
+  391  nslookup 8.8.8.8
+  392  nslookup 34.120.208.123
+  393  sudo python3 useDNS_to_cap.py 
+  394  ls
+  395  sudo python3 useDNS_to_cap.py 
+  396  nslookup 2606:4700:20::ac43:44b1
+  397  nslookup 2606:4700:20::681a:113
+  398  nslookup 52.223.197.143
+  399  nslookup 44.231.111.13
+  400  nslookup 192.168.1.126
+  401  sudo python3 useDNS_to_cap.py 
+  402  nslookup 152.195.34.118
+  403  nslookup 192.168.1.126
+  404  sudo python3 useDNS_to_cap.py 
+  405  nslookup 2a0f:c444::78
+  406  nslookup 188.65.124.92
+  407  sudo python3 useDNS_to_cap.py 
+  408  nslookup 2001:818:e4f1:1::5f88:1bbb
+  409  sudo python3 useDNS_to_cap.py 
+  410  nslookup 162.159.128.61
+  411  sudo python3 useDNS_to_cap.py 
+  412  nslookup 8.8.8.8
+  413  cd ..
+  414  git status
+  415  git add tests/*
+  416  git commit -m "testes com nslookup"
+  417  git push
+  418  sudo wireshark
+  419  code RYU
+  420  cd QOS_TP3/
+  421  ls
+  422  code .
+  423  cd tests/
+  424  ls
+  425  sudo python useDNS_to_cap.py 
+  426  python3
+  427  sudo python useDNS_to_cap.py 
+  428  code ../../RYU/
+  429  sudo python useDNS_to_cap.py 
+  430  git status
+  431  git add useDNS_to_cap.py 
+  432  git commit -m "a ideia está lá"
+  433  git push
+  434  cd RYU/
+  435  git pull
+  436  code .
+  437  ls ../QOS_TP3/
+  438  ps -a
+  439  kill 10531
+  440  sudo kill 10531
+  441  ps -a
+  442  sudo kill 11991
+  443  ps -a
+  444  kill 12960
+  445  sudo kill 12960
+  446  ps -a
+  447  sudo kill python
+  448  sudo wireshark 
+  449  nslookup 52.223.197.107
+  450  sudo wireshark
+  451  cd QOS_TP3/
+  452  ls
+  453  git pull
+  454  code .
+  455  cd tests/
+  456  ls
+  457  sudo python useDNS_to_cap.py 
+  458  cd QOS_TP3/
+  459  code .
+  460  cd tests/
+  461  git status
+  462  git add useDNS_to_cap.py 
+  463  git commit -m "associa tamanho de pacotes a sites"
+  464  git pusj
+  465  git push
+  466  sudo python useDNS_to_cap.py 
+  467  ryu-manager switchVLAN2.py 
+  468  ryu-manager switchVLAN.py --ofp-tcp-listen-port 6633
+  469  ryu-manager switchVLAN2.py --ofp-tcp-listen-port 6633
+  470  kill python
+  471  sudo python2.7 -E topo_.py
+  472  sudo python -E topo_.py
+  473  git status
+  474  git restre switchVLAN2.py
+  475  git restore switchVLAN2.py
+  476  git status
+  477  sudo python2.7 -E topo_.py
+  478  sudo python -E topo_.py
+  479  cd ../
+  480  cd ..
+  481  cd QOS_TP3/
+  482  ls
+  483  cd tests/
+  484  code 
+  485  code .
+  486  python useDNS_to_cap.py 
+  487  sudo python useDNS_to_cap.py 
+  488  ls
+  489  cd ..
+  490  ls
+  491  git status
+  492  sudo python useDNS_to_cap.py 
+  493  ls
+  494  cd tests/
+  495  sudo python useDNS_to_cap.py 
+  496  cd RYU/
+  497  ls
+  498  code tp2/
+  499  ryu-manager tp1/self-learning-l2-switch.py 
+  500  cd tp2
+  501  ryu-manager LoadBalancer.py 
+  502  ryu-manager LoadBalancer.py --ofp-tcp-listen-port 6634
+  503  kill python
+  504  sudo ps -a
+  505  kill python
+  506  sudo kill python
+  507  cd QOS_TP3/
+  508  code .
+  509  ls
+  510  sudo python tests/useDNS_to_cap.py 
+  511  git status
+  512  sudo python tests/useDNS_to_cap.py 
+  513  git status
+  514  git rm tests/nslookups.txt 
+  515  git rm tests/nslookups.txt -f
+  516  git add tests/useDNS_to_cap.py 
+  517  git commit -m "está direitinho, suponho"
+  518  git push
+  519  kill python
+  520  sudo kill python
+  521  sudo ps -a
+  522  sudo kill py
+  523  sudo kill python
+  524  cd QOS_TP3/
+  525  ls
+  526  cd tests/
+  527  ls
+  528  code ../
+  529  ls
+  530  python useDNS_to_cap.py 
+  531  sudo python useDNS_to_cap.py 
+  532  sudo dnf install kwrite
+  533  wget https://sourceforge.net/project/showfiles.php?group_id=149743&package_id=169689&release_id=684492 
+  534  ls
+  535  su
+  536  cat /etc/issue
+  537  cat /etc/fedora-release
+  538  ls
+  539  rm 'showfiles.php?group_id=149743' 
+  540  ls
+  541  cat wget-log 
+  542  rm wget-log 
+  543  ls
+  544  cd Downloads/
+  545  ls
+  546  mv ns-src-2.35.tar.gz ../
+  547  cd ..
+  548  ls
+  549  cp ns-allinone-2.34.tar /opt/
+  550  cp ns-allinone-2.34.tar.gz /opt/
+  551  cp ns-src-2.35.tar.gz /opt/
+  552  sudo cp ns-src-2.35.tar.gz /opt/
+  553  cd /opt/
+  554  ls
+  555  tar -xzf ns-allinone-2.34.tar.gz
+  556  tar -xzf ns-src-2.35.tar.gz 
+  557  sudo tar -xzf ns-src-2.35.tar.gz 
+  558  ls
+  559  cd ns-2.35/
+  560  ./install-sh 
+  561  ./install
+  562  sudo ./install
+  563  ls
+  564  ./install-sh 
+  565  ls
+  566  ./install-sh 
+  567  cd ..
+  568  ls
+  569  rm ns-35 .rf
+  570  rm ns-35 -rf
+  571  rm ns-src-2.35.tar.gz -rf
+  572  sudo rm ns-src-2.35.tar.gz -rf
+  573  ls
+  574  rm -rf ns-2.35/
+  575  sudo rm -rf ns-2.35/
+  576  ls
+  577  cd ~/Downloads/
+  578  ls
+  579  cp ns-allinone-2.34.tar.gz /opt/
+  580  sudo cp ns-allinone-2.34.tar.gz /opt/
+  581  sudo cd /opt/
+  582  ls
+  583  cd /opt/
+  584  ls
+  585  tar -xzf ns-allinone-2.34.tar.gz
+  586  sudo ||
+  587  sudo sudo ||
+  588  sudo tar -xzf ns-allinone-2.34.tar.gz
+  589  cd ns-allinone-2.34/
+  590  ./install
+  591  sudo ./install
+  592  export LD_LIBRARY_PATH=/opt/ns-allinone-2.34/otcl-1.13
+  593  export LD_LIBRARY_PATH=/opt/ns-allinone-2.34/lib
+  594  export TCL_LIBRARY=/opt/ns-allinone-2.34/tcl8.4.18/library
+  595  sudo ./install
+  596  yum install xorg-x11-devel 
+  597  sudo yum install xorg-x11-devel 
+  598  sudo ./install -lX11
+  599  printenv
+  600  printenv > tem
+  601  ls
+  602  sudo printenv > tem
+  603  sudo printenv > tempp
+  604  printenv 
+  605  export LD_LIBRARY_PATH=/opt/ns-allinone-2.34/otcl-1.13, /opt/ns-allinone-2.34/lib
+  606  sudo export LD_LIBRARY_PATH=/opt/ns-allinone-2.34/otcl-1.13, /opt/ns-allinone-2.34/lib
+  607  export LD_LIBRARY_PATH=/opt/ns-allinone-2.34/otcl-1.13, /opt/ns-allinone-2.34/lib
+  608  export LD_LIBRARY_PATH=/opt/ns-allinone-2.34/otcl-1.13,/opt/ns-allinone-2.34/lib
+  609  sudo ./install -lX11
+  610  sudo ./install
+  611  printenv
+  612  sudo  yum install xorg-x11-devel 
+  613  yum list | grep -i xorg
+  614  sudo  yum install libx11-dev
+  615  setenv LD_LIBRARY_PATH 
+  616  setenv
+  617  printenv
+  618  sudo export LD_LIBRARY_PATH=/opt/ns-allinone-2.34/otcl-1.13,/opt/ns-allinone-2.34/lib
+  619  yum install libX11-devel
+  620  sudo yum install libX11-devel
+  621  sudo yum install xorg-x11-proto-devel
+  622  sudo yum install libXt-devel
+  623  sudo ./install
+  624  make
+  625  g++
+  626  sudo ./install
+  627  vi ns-2.34/tools/ranvar.cc 
+  628  sudo vi ns-2.34/tools/ranvar.cc 
+  629  sudo ./install
+  630  cd
+  631   yum install gcc-c++
+  632  sudo  yum install gcc-c++
+  633  yum install libX11-devel
+  634  su
+  635  sudo yum install libX11-devel
+  636  sudo yum install libXt-devel
+  637  sudo yum install libXmu-devel
+  638   wget http://prdownloads.sourceforge.net/tcl/tcl8.4.14-src.tar.gz
+  639  cd /usr/share/
+  640   tar -zxvf /root/tcl8.4.14-src.tar.gz
+  641  sudo  tar -zxvf /root/tcl8.4.14-src.tar.gz
+  642  cp /home/harrypotter/tcl8.4.14-src.tar.gz .
+  643  cp /home/harrypotter/tcl8.4.14-src.tar.gz . -r
+  644  sudo cp /home/harrypotter/tcl8.4.14-src.tar.gz . -r
+  645  ls
+  646   tar -zxvf /root/tcl8.4.14-src.tar.gz
+  647  sudo  tar -zxvf /root/tcl8.4.14-src.tar.gz
+  648  sudo  tar -zxvf ./tcl8.4.14-src.tar.gz
+  649  ls
+  650  cd /usr/share/tcl8.4.14/unix/
+  651  ./configure
+  652  sudo ./configure
+  653  make
+  654  sudo make
+  655  make install
+  656  sudo make install
+  657  sudo  rm -f /root/tcl8.4.14-src.tar.gz
+  658  cd 
+  659  cd /usr/share/
+  660  sudo  wget http://prdownloads.sourceforge.net/tcl/tk8.4.14-src.tar.gz
+  661  sudo tar -zxvf tk8.4.14-src.tar.gz
+  662  cd tk8.4.14/unix/
+  663  sudo ./configure
+  664  sudo make
+  665  sudo make install
+  666  ../
+  667  cd ..
+  668  ls
+  669  cd ..
+  670  ls
+  671  rm tk8.4.14-src.tar.gz -rf
+  672  sudo rm tk8.4.14-src.tar.gz -rf
+  673  sudo rm tcl8.4.14-src.tar.gz -rf
+  674  wget http://downloads.sourceforge.net/otcl-tclcl/otcl-src-1.12.tar.gz
+  675  sudo wget http://downloads.sourceforge.net/otcl-tclcl/otcl-src-1.12.tar.gz
+  676  sudo su
+  677  sudo ps -a
+  678  cd RYU/
+  679  code .
+  680  sudo python -E topo.py
+  681  ls
+  682  cd tp2/
+  683  sudo python -E topo.py
+  684  ls
+  685  sudo python -E topo_.py
+  686  ps -a
+  687  kill 11653
+  688  sudo python -E topo_.py
+  689  ryu-manager ../tp1/self-learning-l2-switch.py --ofp-tcp-listen-port 6633
+  690  cd RYU/tp2/
+  691  code .
+  692  sudo python -E topo_.py
+  693  git status
+  694  git add *.html LoadBalancer.py 
+  695  git status
+  696  git commit -m "flags?"
+  697  git push
+  698  git add LoadBalancer.py 
+  699  git commit -m "melhorar print"
+  700  git push
+  701  ryu-manager ../tp1/self-learning-l2-switch.py --ofp-tcp-listen-port 6633
+  702  cd RYU/tp2/
+  703  code .
+  704  sudo python -E topo_.py
+  705  git log
+  706  git checkout e3a99353d51554afadea2fb3f9d51fedbaa7abb0
+  707  git restore LoadBalancer.py 
+  708  git checkout e3a99353d51554afadea2fb3f9d51fedbaa7abb0
+  709  sudo python -E topo_.py
+  710  git status
+  711  git checkout e3a99353d51554afadea2fb3f9d51fedbaa7abb
+  712  sudo python -E topo_.py
+  713  git status
+  714  rm index*
+  715  sudo rm index*
+  716  ls
+  717  git status
+  718  git pull
+  719  git pull main
+  720  git pull RYU main
+  721  git status
+  722  git restore LoadBalancer.py 
+  723  git status
+  724  git log
+  725  git checkout 59d8b3a
+  726  git status
+  727  git push
+  728  git branch
+  729  git checkout main
+  730  git status
+  731  sudo python -E topo_.py
+  732  sudo rm index.html*
+  733  git status
+  734  git add LoadBalancer.py 
+  735  git commit -m "flags não fazem or, falta isso"
+  736  git push
+  737  sudo python -E topo_.py
+  738  git push
+  739  sudo python -E topo_.py
+  740  git restore LoadBalancer.py 
+  741  cd ../../
+  742  ls
+  743  git clone https://github.com/El-Banderas/GSR
+  744  cd Gs
+  745  cd GSR/
+  746  ls
+  747  git status
+  748  code .
+  749  ls
+  750  git add main.py input.txt 
+  751  git commit -m "?"
+  752  git push
+  753  python main.py 
+  754  git status
+  755  git add input.txt *.py
+  756  git status
+  757  git commit -m "inicio matrizes"
+  758  git push
+  759  ryu-manager switchVLAN.py --ofp-tcp-listen-port 6633
+  760  ryu-manager tp2/switchVLAN2.py --ofp-tcp-listen-port 6633
+  761  ryu-manager tp1/self-learning-l2-switch.py  --ofp-tcp-listen-port 6633
+  762  pwd
+  763  ryu-manager tp1/self-learning-l2-switch.py  --ofp-tcp-listen-port 6633
+  764  ryu-manager switchVLAN3.py  --ofp-tcp-listen-port 6633
+  765  sudo ps -a
+  766  kill 5066
+  767  sudo ps -a
+  768  kill 7921
+  769  kill 10381
+  770  sudo ps -a
+  771  kill 11583
+  772  kill 11597 11857
+  773  kill 11597 
+  774  sudo kill 11597 
+  775  sudo ps -a
+  776  cd RYU/tp2/
+  777  ls
+  778  code .
+  779  sudo python2.7 -E topo.py
+  780  sudo python -E topo.py
+  781  sudo python -E topo_.py
+  782  cd ..
+  783  rm -rf RYU
+  784  ls
+  785  rm self-learning-*
+  786  ls
+  787  cd GSR/
+  788  ls
+  789  git status
+  790  cd ..
+  791  ls
+  792  rm -rf sdnTP1/
+  793  ls
+  794  cd Downloads/
+  795  ls
+  796  rm *
+  797  rm -rf *
+  798  ls
+  799  code tp2
+  800  sudo python -E topo.py
+  801  sudo python -E topo_.py
+  802  cd tp2/
+  803  sudo python -E topo_.py
+  804  cd ~
+  805  ls
+  806  git clone https://github.com/El-Banderas/RYU
+  807  ls
+  808  cd RYU/
+  809  ls
+  810  cd tp2/
+  811  code .
+  812  git status
+  813  sudo python -E topo_.py 
+  814  git status
+  815  sudo python -E topo_.py 
+  816  sudo mn -c
+  817  sudo python -E topo_.py 
+  818  pip uninstall ryu
+  819  sudo pip uninstall ryu
+  820  pip install ryu
+  821  cd ..
+  822  ls
+  823  cd ..
+  824  ls
+  825  cd ryu/
+  826  sudo python setup.py install
+  827  sudo pip install eventlet==0.30.2
+  828  pip install eventlet==0.30.2
+  829  pip install https://github.com/eventlet/eventlet/archive/master.zip
+  830  pip install --upgrade pip wheel setuptools requests
+  831  sudo apt remove pipenv
+  832   pip3 install pipenv
+  833  vi /home/harrypotter/.local/lib/python3.11/site-packages/eventlet/patcher.py 
+  834  dnf install python3-ryu
+  835  sudo dnf install python3-ryu
+  836  sudo dnf install ryu
+  837  pip install ryu
+  838  cd ..
+  839  rm -rf ryu
+  840  ls
+  841  git clone https://github.com/faucetsdn/ryu.git
+  842  ls
+  843  cd ryu; pip install .
+  844  pip install https://github.com/eventlet/eventlet/archive/master.zip
+  845  pip install https://github.com/eventlet/eventlet/archive/master.zippip install eventlet==0.31.1
+  846  pip install eventlet==0.31.1
+  847  cd ..
+  848  ls
+  849  ryu-manager 
+  850  pip install
+  851  pip update
+  852  ryu-manager 
+  853  python --version
+  854  which ryu-manager 
+  855  cd ~/.local/bin/
+  856  ls
+  857  cd ryu-manager
+  858  whereis ryu-manager 
+  859  cd /usr/local/bin/
+  860  ls
+  861  cd ryu-manager
+  862  cd /home/harrypotter/.local/bin/
+  863  ls
+  864  cd ryu-manager
+  865  whereis ryu-manager 
+  866  cd /usr/local/bin/ryu-ma
+  867  cd /usr/local/bin/
+  868  ls
+  869  cd ryu-manager
+  870  wich ryu-manager 
+  871  locate -b ryu-manager 
+  872  find ryu-manager
+  873  find / -name ryu-manager -print
+  874  sudo find / -name ryu-manager -print
+  875  cd /home/harrypotter/ryu/bin/ryu.ma
+  876  cd /home/harrypotter/ryu/bin/ryu-manager
+  877  cd /home/harrypotter/ryu/bin/
+  878  ls
+  879  cd ryu-manager
+  880  python3 --version
+  881  ls
+  882  whereis ryu-manager 
+  883  cd /usr/local/bin/
+  884  ls
+  885  sudo dnf install python3.9
+  886  ls
+  887  whereis ryu-manager 
+  888  pwd
+  889  cd
+  890  ls
+  891  cd ryu
+  892  ls
+  893  ls bin
+  894  cd bin
+  895  ryu-manager 
+  896  cd ..
+  897  ls
+  898  python3.9 -m pip install --user virtualenv
+  899  python3.9 -m ensurepip --user
+  900  python3.9 -m pip install --user virtualenv
+  901  python3 -m venv env
+  902  python3.9 -m venv env
+  903  python --version
+  904  venv 3.9
+  905  source env/bin/activate
+  906  ls
+  907  python --version
+  908  wich python
+  909  exit
+  910  sudo wireshark
+  911  cd RYu
+  912  cd RYU
+  913  cd ..
+  914  cd ryu/
+  915  ls
+  916  source env/bin/activate
+  917  python --version
+  918  cd ../RYU/tp2/
+  919  ls
+  920  ryu-manager LoadBalancer.py 
+  921  code .
+  922  git status
+  923  ryu-manager LoadBalancer.py --ofp-tcp-listen-port 6634
+  924  sudo python -E topo_.py
+  925  git status
+  926  git add LoadBalancer.py 
+  927  git commit -m "Já guarda no dicionário"
+  928  git push
+  929  git pull
+  930  git merge
+  931  git status
+  932  git push
+  933  git status
+  934  git add LoadBalancer.py 
+  935  git commit -m " acho que está, até tenho medo"
+  936  git push
+  937  git add LoadBalancer.py 
+  938  git commit -m "agora que o professor está a ver vou melhorar as mensagens de commit"
+  939  git push
+  940  cd ryu/tp2
+  941  cd RYU/tp2/
+  942  ls
+  943  sudo python topo_.py 
+  944  sudo ps -a
+  945  sudo python topo_.py 
+  946  cd RYU/tp2/
+  947  code .
+  948  sudo python -E topo_.py 
+  949  cd RYU/tp2/
+  950  ls
+  951  code .
+  952  sudo python -E topo_.py 
+  953  ryu-manager LoadBalancer.py --ofp-tcp-listen-port 6634
+  954  ls
+  955  ls ../
+  956  ryu-manager LoadBalancer.py --ofp-tcp-listen-port 6634
+  957  sudo wireshark
+  958  cd ryu/tp2
+  959  cd RYU/tp1/
+  960  cd ../tp2/
+  961  ls
+  962  code .
+  963  sudo python -E topo_.py
+  964  code .
+  965  cd RYU/tp2/
+  966  code .
+  967  sudo python -E topo_.py
+  968  ryu-manager switchVLAN2.py --ofp-tcp-listen-port 6633
+  969  sudo python -E topo_.py
+  970  sudo mn -c
+  971  sudo python -E topo_.py
+  972  cd ~/Downloads/
+  973  ls
+  974  cd tp2/
+  975  ls
+  976  cd ~
+  977  ls
+  978  sudo ps -a
+  979  cd QOS_TP3/
+  980  ls
+  981  code .
+  982  ls
+  983  sudo python main.py 
+  984  sudo python catch_ips.py 
+  985  code .
+  986  sudo ps -a
+  987  sudo wireshark 
+  988  sudo ps -a
+  989  sudo kill 5116
+  990  dns 146.75.90.167
+  991  cd QOS_TP3/
+  992  sudo wireshark 
+  993  sudo python main.py 
+  994  sudo python catch_ips.py 
+  995  sudo python main.py 
+  996  git status
+  997  git add interface/catch_ips.py shared_class.py tests_captures/useDNS_to_cap.py 
+  998  git commit -m "botão de imprimir cenas"
+  999  git push
+ 1000  sudo python main.py 
+ 1001  python3 -m venv .venv
+ 1002  ls
+ 1003  source /opt/Py3Venv/bin/activate
+ 1004  source env/bin/activate
+ 1005  venv 3.9
+ 1006  history 10000 > historico
