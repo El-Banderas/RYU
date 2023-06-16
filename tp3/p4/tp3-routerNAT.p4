@@ -256,9 +256,6 @@ control MyIngress(inout headers hdr,
             src_mac.apply();
             dst_mac.apply();
         }
-		if (!meta.is_tcp){
-			hdr.udp.csum = 0;
-		}
     }
 }
 
@@ -269,7 +266,11 @@ control MyIngress(inout headers hdr,
 control MyEgress(inout headers hdr,
 				 inout metadata meta,
 				 inout standard_metadata_t standard_metadata) {
-	apply { /* do nothing */ }
+	apply {
+			if (!meta.is_tcp){
+				hdr.udp.csum = 0;
+			}
+		 }
 }
 
 /*************************************************************************
@@ -299,7 +300,7 @@ control MyComputeChecksum(inout headers  hdr, inout metadata meta) {
 				HashAlgorithm.csum16
 		);
 
-				update_checksum_with_payload(hdr.tcp.isValid(),
+		update_checksum_with_payload(hdr.tcp.isValid(),
 					{
 					hdr.ipv4.srcAddr,
 					hdr.ipv4.dstAddr,
